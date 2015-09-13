@@ -1,0 +1,256 @@
+
+<!DOCTYPE html>
+<html> 
+<head>
+ 	<title>Hayden Shelton CS4600 ASSIGNMENT 2</title> 
+</head> 
+	
+	<!-- Hayden Shelton - CS4600
+	Code for canvas and code for reading in files was referenced 
+	from http://www.eng.utah.edu/~cs4600/assignments/HW2%20CS%204600/ -->
+<body> 	
+	<input type="file" onchange='readText(this)' /> 
+	<br> 
+	<br> 
+	<canvas id="myCanvas" width="512" height="512"> </canvas>
+	<script type = "text/javascript"> 
+		
+	var canvas = document.getElementById('myCanvas');
+	var context = canvas.getContext('2d');
+	context.beginPath();
+	context.rect(0,0,500,500);
+	context.fill();
+
+	var reader = new FileReader();
+
+	//initialize buffers to hold line objects and circle objects
+	var lineBuffer = [];
+	var circleBuffer = [];
+
+ 	function readText(that){
+
+ 		//clear drawing area
+ 		context.beginPath();
+		context.rect(0,0,500,500);
+		context.fill();
+
+ 		if(that.files && that.files[0]){ 
+			
+			var reader = new FileReader(); 
+			
+			reader.onload = function (e) { 
+				var fileContents=e.target.result;
+
+	// now fileContents will have the strings contained 
+	// in the file
+	// we want each line to be a separate entity in an 
+	//array, so split on newline: "\n"
+
+		     		var fileLines = fileContents.split("\n");
+
+	// now fileLines has each line as an array element, 
+	// we want to set information based
+	// on the first word in each line.  
+	// Split into tokens and check the first  token
+
+				for ( var i = 0; i < fileLines.length; ++i ) {
+					var tokens = fileLines[i].split(" ");
+					if ( tokens[0].match("LINE") ) { 
+						// if a line, then process line
+						var x1 = parseInt(tokens[1]);
+						var y1 = parseInt(tokens[2]);
+						var x2 = parseInt(tokens[3]);
+						var y2 = parseInt(tokens[4]);
+						var color1 = tokens[5];
+						var color2 = tokens[6];
+
+						//draw line
+						var line = {x1: x1, x2: x2, y1: y1, y2: y2,  color1: color1, color2: color2};
+						drawLine(line);
+
+					} else  if ( tokens[0].match("CIRCLE") ){ 
+						// process circle
+						var x1 = parseInt(tokens[1]);
+						var y1 = parseInt(tokens[2]);
+						var radius = parseInt(tokens[3]);
+						var color = tokens[4];
+						
+						//draw circle
+						var circle = {x1: x1, y1: y1, radius: radius, color: color};
+						drawCircle(circle);
+					}
+				}
+			
+			}; //end reader.onload() 
+			
+		reader.readAsText(that.files[0]); 
+	}
+} 
+
+function drawLine(line)
+{
+	var currentColor = line.color1;
+
+	/* 
+	* determine if the line is a trivial case (m = 0 or m = 1)
+	*/
+	var m = (line.y2 - line.y1) / (line.x2 - line.x1);
+	alert(m);
+	if(m == 0)
+	{
+
+		//start drawing a horizontal line 
+		drawPixel(line.x1, line.y1, currentColor);
+		var currentX = line.x1;
+		currentX++;
+		while(currentX < line.x2)
+		{
+
+	//interpolate the colors
+		if(currentColor == line.color1)
+		{
+			currentColor = line.color2;
+		}
+		else
+		{
+			currentColor = line.color1;
+		}
+			drawPixel(currentX, line.y1, currentColor);
+			currentX++;
+		}
+		return;
+	}
+
+	if(m == 1)
+	{
+		//draw line y = x
+		drawPixel(line.x1, line.y1, currentColor);
+		var currentX = line.x1;
+		var currentY = line.y1;
+		currentX++;
+		currentY++;
+		while(currentX < line.x2)
+		{
+		//interpolate the colors
+		if(currentColor == line.color1)
+		{
+			currentColor = line.color2;
+		}
+		else
+		{
+			currentColor = line.color1;
+		}
+			drawPixel(currentX, currentY, currentColor);
+			currentX++;
+			currentY++;
+		}
+		return;
+	}
+
+
+	var x1 = line.x1;
+	var x2 = line.x2;
+	var y1 = line.y1;
+	var y2 = line.y2;
+
+	/*
+	* determine if the line has a slope 0 > m > -1
+	* in this case we will flip about x-axis
+	*/
+	if(0 > m && m > -1)
+	{
+
+		x1Prime = line.x1;
+		y1Prime = line.y1 * -1;
+
+		x2Prime = line.x2;
+		y2Prime = line.y2 * -1;
+
+		x1 = x1Prime;
+		x2 = x2Prime;
+		y1 = y1Prime;
+		y2 = y2Prime;
+
+	}
+
+
+
+	//we need to keep track of how much of the line we've drawn
+	var currentX = line.x1;
+	var currentY = line.y1;
+
+	//calculate d0
+	var dy = line.y2 - line.y1;
+	var dx = line.x2 - line.x1;
+	var d = 2 * dy - dx;
+	
+	//draw first pixel
+	drawPixel(line.x1, line.y1, line.color1);
+		if(d <=0)
+		{
+			//update d for east move
+		d = d + (2 * dy);
+		}
+		else
+		{
+		//update d for northeast move
+	
+		d = d + 2 * (dy - dx);
+		}
+
+	//draw the remainder of the line
+	while(currentX < line.x2)
+	{
+		//interpolate the colors
+		if(currentColor == line.color1)
+		{
+			currentColor = line.color2;
+		}
+		else
+		{
+			currentColor = line.color1;
+		}
+		if(d <=0)
+		{
+		//draw a pixel east
+
+		drawPixel(currentX++, currentY, currentColor);	
+		d = d + (2 * dy);
+		}
+		else
+		{
+		//draw northeast pixel
+		drawPixel(currentX++, currentY++, currentColor);
+		d = d + 2 * (dy - dx);
+		}
+	}
+}
+
+
+function drawCircle(circle)
+{
+
+
+}
+
+//draws a 10 X 10 pixel onto the grid
+	function drawPixel(x, y, color)
+	{
+		//multipy x & y by 10 since pixels are 10 x 10
+		var x0 = x * 10;
+		//account for difference in grid origin
+		var y0 = (500 - (y * 10)  - 10);
+	
+		context.fillStyle = color.trim();
+		//clear drawing area
+ 		context.beginPath();
+		context.rect(x0,y0,10,10);
+		context.fill();
+	}	
+	</script>
+
+	<div id="main"></div> 
+
+</body> 
+
+</html>

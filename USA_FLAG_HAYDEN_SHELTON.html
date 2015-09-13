@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<body>
+<canvas id="flagCanvas" width="1140" height="600" style= " box-shadow: 15px 15px 8px grey;";> </canvas>
+
+<script>
+	//get canvas
+	var canvas = document.getElementById("flagCanvas");
+	var context = canvas.getContext("2d");
+
+	var canvasWidth = canvas.getAttribute("width");
+	var canvasHeight = canvas.getAttribute("height");
+
+
+	var blueRectLength = canvasWidth * 0.38;
+	var blueRectHeight = canvasHeight * 0.538;
+
+	//draw blue square for stars
+	context.fillStyle = "#3C3B6E";
+	context.fillRect(0, 0, blueRectLength, blueRectHeight);
+
+	//draw 50 stars
+	context.fillStyle = "#FFFFFF";
+
+	var evenYPos = 15;
+	var oddYPos = 40;
+
+	//draw 30 even stars
+	for(var i = 0; i < 5; i++)
+	{
+		for(var j = 0; j < 6; j++)
+		{
+			drawStar(j * 65 + 40, evenYPos);
+		}
+
+		evenYPos += 60;
+	}
+	//draw 20 odd stars
+	for(var i = 0; i < 4; i++)
+	{
+		for(var j = 0; j < 5; j++)
+		{
+			drawStar(j * 65 + 80, oddYPos);
+		}
+
+		oddYPos += 60;
+	}
+
+	//draw 4 shorter red bars
+	var barWidth = canvasHeight / 13;
+	var xBarOffset = 0;
+	context.fillStyle = "#B22234";
+
+	for(var i = 0; i < 4; i++)
+	{
+		context.fillRect(blueRectLength, i * barWidth + xBarOffset, canvasWidth - barWidth, barWidth);
+		xBarOffset += barWidth;		
+	}
+
+	//draw 3 full length bars
+	for(var i = 4; i < 8; i++)
+	{
+			context.fillRect(0, i * barWidth + xBarOffset, canvasWidth, barWidth);
+		xBarOffset += barWidth;		
+	}
+
+	//draw a star centered at x, y
+	function drawStar(x, y)
+	{
+		context.beginPath;
+		context.moveTo(x, y);
+		context.lineTo(x +5, y + 9);
+		context.lineTo(x + 16, y + 9);
+		context.lineTo(x + 7, y + 14);
+		context.lineTo(x +12, y + 22);
+		context.lineTo(x, y + 18);
+		context.lineTo(x - 12, y + 22);
+		context.lineTo(x - 7, y + 14);
+		context.lineTo(x - 16, y + 9);
+		context.lineTo(x - 5, y + 9);
+		context.closePath();
+		context.fill();
+
+	}
+
+</script>
+
+
+	<div style="width:1140px; text-align:center;">
+		<h2  > The flag of USA </h2>
+		<h3> Hayden Shelton CS4600</h3>
+	</div>
+</body>
+</html>
