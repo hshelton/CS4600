@@ -1,0 +1,4 @@
+LINE 5 5 48 15 green yellow
+LINE 5 20 15 30 white blue
+LINE 5 20 8 10 orange purple
+CIRCLE 10 10 100 tan

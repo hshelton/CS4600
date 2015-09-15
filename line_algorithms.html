@@ -31,6 +31,7 @@
 
  		//clear drawing area
  		context.beginPath();
+ 		context.fillStyle = "black";
 		context.rect(0,0,500,500);
 		context.fill();
 
@@ -89,6 +90,16 @@
 
 function drawLine(line)
 {
+
+	//if it's a trivial case we'll handle the line differently
+	
+
+
+
+
+
+
+
 	var currentColor = line.color1;
 
 	/* 
@@ -159,29 +170,19 @@ function drawLine(line)
 	*/
 	if(0 > m && m > -1)
 	{
-
-		x1Prime = line.x1;
-		y1Prime = line.y1 * -1;
-
-		x2Prime = line.x2;
-		y2Prime = line.y2 * -1;
-
-		x1 = x1Prime;
-		x2 = x2Prime;
-		y1 = y1Prime;
-		y2 = y2Prime;
+		
 
 	}
 
 
 
 	//we need to keep track of how much of the line we've drawn
-	var currentX = line.x1;
-	var currentY = line.y1;
+	var currentX = x1;
+	var currentY = y1;
 
 	//calculate d0
-	var dy = line.y2 - line.y1;
-	var dx = line.x2 - line.x1;
+	var dy = y2 - y1;
+	var dx = x2 - x1;
 	var d = 2 * dy - dx;
 	
 	//draw first pixel
@@ -199,7 +200,7 @@ function drawLine(line)
 		}
 
 	//draw the remainder of the line
-	while(currentX < line.x2)
+	while(currentX < x2)
 	{
 		//interpolate the colors
 		if(currentColor == line.color1)
@@ -230,8 +231,49 @@ function drawLine(line)
 function drawCircle(circle)
 {
 
+	//these values are the pixels just drawn
+	var xp = 0;
+	var yp = circle.radius;
 
+	//draw pixel at x1, y1 + radius
+	drawPixel(circle.x1, circle.y1 + circle.radius, circle.color);
+	drawPixel(circle.x1, circle.y1 - circle.radius, circle.color);
+	drawPixel(circle.x1 - circle.radius, circle.y1, circle.color);
+	drawPixel(circle.x1 + circle.radius, circle.y1, circle.color);
+
+	while(xp < circle.radius * .7071)
+	{
+		//calucalate F(M) to get decision variable
+		var Mx = xp+ 1;
+		var My = yp + 1/2;
+		var d = (Mx * Mx) + (My * My) - (circle.radius * circle.radius);
+
+		if(d >= 0) //move southeast
+		{
+			xp++;
+			yp--;
+		}
+		else //move east
+		{
+			xp++;
+		}
+
+	
+			drawPixel(circle.x1 - xp, circle.y1 - yp, circle.color);
+			drawPixel(circle.x1 - xp, circle.y1 + yp, circle.color);
+			drawPixel(circle.x1 + xp, circle.y1 - yp, circle.color);
+			drawPixel(circle.x1 + xp, circle.y1 + yp, circle.color);
+		
+			drawPixel( circle.x1 - yp, circle.y1 - xp,  circle.color);
+			drawPixel( circle.x1 - yp, circle.y1 + xp,  circle.color);
+			drawPixel( circle.x1 + yp, circle.y1 - xp,  circle.color);
+			drawPixel( circle.x1 + yp, circle.y1 + xp,  circle.color);
+	}
 }
+
+
+
+
 
 //draws a 10 X 10 pixel onto the grid
 	function drawPixel(x, y, color)
