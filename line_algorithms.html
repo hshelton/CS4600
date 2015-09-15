@@ -88,143 +88,224 @@
 	}
 } 
 
-function drawLine(line)
+
+
+
+
+function drawLine(_line)
 {
+	var line = _line;
+
+	
 
 	//if it's a trivial case we'll handle the line differently
-	
-
-
-
-
-
-
-
-	var currentColor = line.color1;
-
-	/* 
-	* determine if the line is a trivial case (m = 0 or m = 1)
-	*/
 	var m = (line.y2 - line.y1) / (line.x2 - line.x1);
 	alert(m);
-	if(m == 0)
-	{
 
-		//start drawing a horizontal line 
-		drawPixel(line.x1, line.y1, currentColor);
-		var currentX = line.x1;
-		currentX++;
-		while(currentX < line.x2)
-		{
+	var mF = parseFloat(m);
 
-	//interpolate the colors
-		if(currentColor == line.color1)
-		{
-			currentColor = line.color2;
-		}
-		else
-		{
-			currentColor = line.color1;
-		}
-			drawPixel(currentX, line.y1, currentColor);
-			currentX++;
-		}
+	//this breaks the switch for some dumb reason so handnle case 2s specially
+	if((mF < 0.0) && (mF > -1.0))
+	{	
+		drawPixels(getCase2Buffer(line), line.color1);
 		return;
 	}
 
-	if(m == 1)
+	//this breaks the switch for some dumb reason so handnle case 3s specially
+	if(mF > 1.0)
 	{
-		//draw line y = x
-		drawPixel(line.x1, line.y1, currentColor);
-		var currentX = line.x1;
-		var currentY = line.y1;
-		currentX++;
-		currentY++;
-		while(currentX < line.x2)
-		{
-		//interpolate the colors
-		if(currentColor == line.color1)
-		{
-			currentColor = line.color2;
-		}
-		else
-		{
-			currentColor = line.color1;
-		}
-			drawPixel(currentX, currentY, currentColor);
-			currentX++;
-			currentY++;
-		}
+		drawPixels(getCase3Buffer(line), line.color1);
 		return;
 	}
 
-
-	var x1 = line.x1;
-	var x2 = line.x2;
-	var y1 = line.y1;
-	var y2 = line.y2;
-
-	/*
-	* determine if the line has a slope 0 > m > -1
-	* in this case we will flip about x-axis
-	*/
-	if(0 > m && m > -1)
+		//this breaks the switch for some dumb reason so handnle case 3s specially
+	if(mF < -1.0)
 	{
+		drawPixels(getBothCasesBuffer(line), line.color1);
+		return;
+	}
+
+	var buffer = [];
+	switch(mF)
+	{
+		case mF == 0.0:
+		buffer = getHorizontalBuffer(line);
+		break;
+
+		case mF == 1.0:
+		buffer = getYEqualXBuffer(line);
+		break;
+
 		
 
+		default: 
+		buffer = Bresenhams(line);
+		break;
+
 	}
 
+	
+	drawPixels(buffer, line.color1);
 
+}
+
+
+//return a pixel array that holds the pixels for a line
+function Bresenhams(line)
+{
+	//the array of pixels to draw
+	var pixelsToDraw = [];
 
 	//we need to keep track of how much of the line we've drawn
-	var currentX = x1;
-	var currentY = y1;
+	var currentX = line.x1;
+	var currentY = line.y1;
 
 	//calculate d0
-	var dy = y2 - y1;
-	var dx = x2 - x1;
+	var dy = line.y2 - line.y1;
+	var dx = line.x2 - line.x1;
 	var d = 2 * dy - dx;
 	
-	//draw first pixel
-	drawPixel(line.x1, line.y1, line.color1);
+	//add first pixel
+	//drawPixel(line.x1, line.y1, line.color1);
+	pixelsToDraw.push({x: line.x1, y: line.y1});
+
 		if(d <=0)
 		{
-			//update d for east move
+		//update d for east move
 		d = d + (2 * dy);
 		}
 		else
 		{
 		//update d for northeast move
-	
 		d = d + 2 * (dy - dx);
 		}
 
 	//draw the remainder of the line
-	while(currentX < x2)
+	while(currentX < line.x2)
 	{
-		//interpolate the colors
-		if(currentColor == line.color1)
-		{
-			currentColor = line.color2;
-		}
-		else
-		{
-			currentColor = line.color1;
-		}
 		if(d <=0)
 		{
-		//draw a pixel east
-
-		drawPixel(currentX++, currentY, currentColor);	
+		//east pixel
+		pixelsToDraw.push({x: currentX ++, y: currentY});
 		d = d + (2 * dy);
 		}
 		else
 		{
-		//draw northeast pixel
-		drawPixel(currentX++, currentY++, currentColor);
+		//northeast pixel
+		pixelsToDraw.push({x: currentX ++, y: currentY++});
 		d = d + 2 * (dy - dx);
 		}
 	}
+
+	return pixelsToDraw;
+}
+
+
+
+function getHorizontalBuffer(line)
+{
+	//no need for Bresenham's algorithm here
+	var pixelsToDraw = [];
+	var xStart = line.x1;
+	var xStop = line.x2;
+	var y = line.y1;
+
+
+	while(xStart < xStop )
+	{
+		pixelsToDraw.push({x: xStart, y: y });
+		xStart++;
+	}
+
+	return pixelsToDraw;
+	
+
+}
+
+function getYEqualXBuffer(line)
+{
+	//no need for Bresenham's algorithm here
+	var pixelsToDraw = [];
+	var xStart = line.x1;
+	var xStop = line.x2;
+	var yStart = line.y1;
+	var yStop = line.y2;
+
+
+	while(xStart < xStop )
+	{
+		pixelsToDraw.push({x: xStart, y: y });
+		xStart++;
+		yStart++;
+	}
+
+	return pixelsToDraw;
+	
+
+}
+
+function getCase2Buffer(line)
+{
+	//flip about y axis
+	var newLine = line;
+
+	newLine.y1 *= -1;
+	newLine.y2 *= -1;
+	
+
+	var tempBuffer = Bresenhams(newLine);
+
+	for(var i = 0; i < tempBuffer.length; i++)
+	{
+		tempBuffer[i].y *= -1;
+	}
+
+	return tempBuffer;
+}
+
+function getCase3Buffer(line)
+{
+   //flip about the line y = x
+
+   var newLine = {x1: line.y1, x2: line.y2, y1: line.x1, y2: line.x2, color1: line.color1, color2: line.color2};
+
+
+   var tempBuffer = Bresenhams(newLine);
+
+   for(var i = 0; i < tempBuffer.length; i++)
+	{
+		var yHolder = tempBuffer[i].y;
+		tempBuffer[i].y = tempBuffer[i].x;
+		tempBuffer[i].x = yHolder;
+	}
+
+	return tempBuffer;
+
+}
+function getBothCasesBuffer(line)
+{
+	//first negate the y variables
+
+	var newLine = {x1: line.x1, x2: line.x2, y1: line.y1 * -1, y2: line.y2 * -1, color1: line.color1, color2: line.color2};
+
+	//now swap x's and y's
+	var newLine2 = {x1: newLine.y1, x2: newLine.y2, y1: newLine.x1, y2: newLine.x2, color1: newLine.color1, color2: newLine.color2};
+
+
+   var tempBuffer = Bresenhams(newLine2);
+
+     for(var i = 0; i < tempBuffer.length; i++)
+	{
+	
+
+		var yHolder = tempBuffer[i].y;
+		tempBuffer[i].y = tempBuffer[i].x;
+		tempBuffer[i].x = yHolder;
+
+			tempBuffer[i].y *= -1;
+	}
+
+	return tempBuffer;
 }
 
 
@@ -258,7 +339,6 @@ function drawCircle(circle)
 			xp++;
 		}
 
-	
 			drawPixel(circle.x1 - xp, circle.y1 - yp, circle.color);
 			drawPixel(circle.x1 - xp, circle.y1 + yp, circle.color);
 			drawPixel(circle.x1 + xp, circle.y1 - yp, circle.color);
@@ -273,11 +353,20 @@ function drawCircle(circle)
 
 
 
+function drawPixels(pixelArray, color)
+{
+	for(var index = 0; index < pixelArray.length; index++)
+	{
+		drawPixel(pixelArray[index], color);
+	}
+}
 
 
 //draws a 10 X 10 pixel onto the grid
-	function drawPixel(x, y, color)
+	function drawPixel(pixel, color)
 	{
+		var x = pixel.x;
+		var y = pixel.y;
 		//multipy x & y by 10 since pixels are 10 x 10
 		var x0 = x * 10;
 		//account for difference in grid origin
@@ -287,6 +376,8 @@ function drawCircle(circle)
 		//clear drawing area
  		context.beginPath();
 		context.rect(x0,y0,10,10);
+
+
 		context.fill();
 	}	
 	</script>
