@@ -1,0 +1,50 @@
+
+<!DOCTYPE html>
+<html> 
+<head>
+ 	<title>Color Parsing</title> 
+</head> 
+
+</body>
+
+	
+
+
+
+<script type="text/javascript">
+
+var color = getHexColor("seagreen");
+
+//return a Hexadecimal color from a color string
+//the following function was copied from Professor Hansen's class email
+function getHexColor(colorStr) {
+  var a = document.createElement('div');
+  a.style.color = colorStr;
+  var colors = window.getComputedStyle()
+  var colors =   window.getComputedStyle( document.body.appendChild(a) ).color.match(\d+/g).map(function(a){ return parseInt(a,10); });
+  document.body.removeChild(a);
+  return (colors.length >= 3) ? '#' + (((1 << 24) + (colors[0] << 16) + (colors[1] << 8) + colors[2]).toString(16).substr(1)) : false;
+}
+
+
+//parse out rgb values from a color input string
+//the following function was copied from Professor Hansen's class email
+function parseColor(input) {
+    var m;
+ m = input.match(/^#([0-9a-f]{6})$/i)[1];
+    if( m) {
+        return [
+            parseInt(m.substr(0,2),16),
+            parseInt(m.substr(2,2),16),
+            parseInt(m.substr(4,2),16)
+        ];
+     }
+}
+
+
+
+
+
+</script>
+
+</html>
