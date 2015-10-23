@@ -1,0 +1,13 @@
+Hayden Shelton Assignment 3 Write Up.
+
+I broke up this assignment into several stages. First, I laid out the groundwork; I created the main html file, added a canvas and put in range inputs for my X position, Y position, rotation and speed. I chose to use JQuery for easier DOM manipulation. Then I began figuring out how to use MV.js. Once I figured that out, I began to draw my geometry and apply transformations to it. I chose to store my points as a series of vectors. I ran into difficulty trying to multiply my transformation matrices with these vectors so I had to implement my own matrix, vector multiplication function. Another difficulty I had was getting objects to rotate about their center. I finally figured out that I need to draw them such that their center is at the origin. Once I figured out the transformations I just needed to implement the matrix stack. Since their are only two levels in my hierarchy, I chose not to push and pop transformations to an array, but to apply them in the correct order manually. So the stack is not explicitly a stack, but the way the transformations are applied are as if they were in a stack. My last step was to apply styling and custom controls to make this look good.
+
+
+Since the Quad Copter is a relatively simple object my model heirarchy was a tree with two levels.
+
+Level1 - base: this includes the square base and the four wings. Since the wings don't need to rotate independently of the base, it makes sense to combine to two objects
+
+Level2 - rotars: the four rotars are each considered leaf nodes. 
+
+
+Overall, I spent about 15 hours on this assignment. I learned alot about transformations and hierarchies.

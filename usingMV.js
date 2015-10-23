@@ -37,13 +37,13 @@
 		   
 		}
 
-
+/*
 		body
 		{
 			background-image: url("diamonds.png");
 		}
 
-		
+		*/
 		div.control-box
 		{
 			position: absolute;
@@ -62,7 +62,6 @@
 			top:60px;
 			width: 350px;
 			left:30px;
-			color:white;
 		
 		}
 
@@ -155,14 +154,7 @@
 <script type = "text/javascript"> 
 	
 	window.onLoad = init();
-	var context;
-	var canvas;
-	var mStack;
-	var xTransform1;
-	var yTransform1;
-	var rotation1;
 
-	var copterBaseModel;
 /*
 	//initialize speed, rotation, and position labels
 	$("speedVal").html( $("#speedControl").val());
@@ -175,118 +167,26 @@
 
 	function init()
 	{
-	canvas = document.getElementById('myCanvas');
-	context = canvas.getContext('2d');
+	var canvas = document.getElementById('myCanvas');
+	var context = canvas.getContext('2d');
+	context.beginPath();
+	context.rect(0,0,1024,1024);
+	context.fillStyle="#6600FF";
+	context.fill();
 
-	xTransform1 = mat3([1, 0, 0, 0, 1, 0, 0, 0, 1]));
-	yTransform1 = mat3([1, 0, 0, 0, 1, 0, 0, 0, 1]));
-	rotation1 = mat3([1, 0, 0, 0, 1, 0, 0, 0, 1]));
+	var vertices = [
+        vec2( -1, -1 ),
+        vec2(  0,  1 ),
+        vec2(  1, -1 )
+    ];
 
-	//push identity matrix onto transformation matrix stack
-	mStack = [];
-	mStack.push(mat3([1, 0, 0, 0, 1, 0, 0, 0, 1]));
-
-
-	resetModel();
-
-
-
-	draw();
-
-	}
-
-	function resetModel()
-	{
-			 //copterBaseModel is an object, each component is an array of vec3s
-	 copterBaseModel = {};
-	 copterBaseModel.base = [];
-	 copterBaseModel.base.push(vec3([462, 462, 1]));
-	 copterBaseModel.base.push(vec3([562, 462, 1]));
-	 copterBaseModel.base.push(vec3([562, 562, 1]));
-	 copterBaseModel.base.push(vec3([462, 562, 1]));
-	}
-
-	//draw will cause a complete redraw of the base and  4 the rotars
-	function draw() {
- 	context.clearRect(0, 0, canvas.width * 2, canvas.height * 2);
-
-		context.fillStyle = "#5C8533";
+    var result  = translate2D( 10, 5 );
 
 
-		var matrix = mStack.pop();
-
-		//the matrix we'll transform by is the product of the matrix stack
-		for(var i = 0; i < mStack.length; i++)
-		{
-			matrix = mult(matrix, mStack.pop());
-		}
-
-	//perform the transformations by multiplying the CTM
-		var CTM = matrix;
-
-		
-		for(var i = 0; i < copterBaseModel.base.length; i++)
-		{
-			
-			var currentVector = copterBaseModel.base[i];
-			var product = multMV(CTM, currentVector);
-			copterBaseModel.base[i] = product;
-		}
-	
-		mStack.push(CTM);
-
-		//draw base
-	    var basePath = new Path2D();
-	    basePath.moveTo(copterBaseModel.base[0][0], copterBaseModel.base[0][1]);
-		for(var i = 1; i < copterBaseModel.base.length; i++)
-		{
-		 	basePath.lineTo(copterBaseModel.base[i][0], copterBaseModel.base[i][1]);
-		}
-		context.fill(basePath);
-
-
-
-	/*
-
-		//top arm
-		context.fillRect(500, 262, 24, 200);
-
-		//right arm
-		context.fillRect(562, 500, 200, 24);
-
-		//bottom arm
-		context.fillRect(500, 562, 24, 200);
-
-		//left arm
-		context.fillRect(262, 500, 200, 24)
-
-	*/
-		//
- 
-}
-
-	function updateRotars()
-	{
-		/* pop and mutliply transoformation matrices as appropriate */
 
 	}
 
 
-	//performs matrix, vector multiplication
-	function multMV(matrix, vector3)
-	{
-		var v0 = matrix[0][0] * vector3[0] + matrix[1][0] * vector3[1] + matrix[2][0] * vector3[2];
-		var v1 = matrix[0][1] * vector3[0] + matrix[1][1] * vector3[1] + matrix[2][1] * vector3[2];
-	
-
-		//alert("x: " + v0 + " y: " + v1);
-		return vec3([v0, v1, 1]);
-	
-
-	}
-
-
-	
 
 	$("#speedControl").change(function()
 	{
@@ -296,52 +196,17 @@
 	$("#rotationControl").change(function()
 	{
 		$("#rotationVal").html($(this).val() + " deg");
-		var deg = $(this).val();
-
-        var c = Math.cos(deg);
-        var s = Math.sin(deg);
-
-
-
-        var rotation = mat3(vec3([c, s, 0]), vec3([s * -1 , c, 0]), vec3([0, 0, 1]));
-
-
-        mStack.push(rotation);
-
-        draw();
 	});
-
+		
 	$("#xPosControl").change(function()
 	{
-		resetModel();
-		var xVal = $(this).val();
-	$("#xPosVal").html(xVal);
-
-		var xDif = xVal - 512;
-
-
-
-		var xTranslate = mat3(vec3([1, 0, 0]), vec3([0, 1, 0]), vec3([xDif, 0, 1]));
-
-		mStack.push(xTranslate);
-
-		draw();
-
+	
+	$("#xPosVal").html($(this).val());
 	});
 	
 	$("#yPosControl").change(function()
 	{
-		resetModel();
 		$("#yPosVal").html($(this).val());
-
-		var yVal = $(this).val();
-		var yDif = yVal - 512;
-
-
-		var yTranslate = mat3(vec3([1, 0, 0]), vec3([0, 1, 0]), vec3([0, yDif, 1]));
-		mStack.push(yTranslate);
-		draw();
-
 	});
 </script>
 

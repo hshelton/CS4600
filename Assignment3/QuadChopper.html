@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html> 
+<head>
+ 	<title>QUADCOPTER Hayden Shelton</title> 
+ 	<script type="text/javascript" src="jquery-2.1.4.js"></script>
+ 	<script type="text/javascript" src="MV.js"></script>
+ 	<script type="text/javascript" src="MVHelper.js"></script>
+ 	<link rel="stylesheet" href="style.css"/>
+</head> 
+<body>
+	<div class="headline">
+		<h2> Quad Copter </h2>
+		<p>
+			Hayden Shelton CS 4600
+			Fall 2015
+		</p>
+		<p style="margin-top:330px;">
+		Directional Controls: <strong> W A S D </strong>
+		<br>
+		Rotational Controls: <strong> E R </strong>
+		<br>
+		Speed Controls: <strong> F C </strong>
+		</p>
+	</div>
+	<div class="control-box">
+		<label> Speed : <span id="speedVal"> 100</span>
+		<input id="speedControl" class="blue" type="range"/ max="100" min="0" step="1" value="100" >
+		</label>
+		<br>
+		<label> Rotation : <span id="rotationVal"> 0 deg</span>
+		<input id="rotationControl" class="green" type="range"/ max="360" min="-360" step="1">
+		</label>
+		<br>
+		<label> X POS : <span id="xPosVal"> 512</span>
+		<input id="xPosControl" class="black" type="range"/ max="1024" min="0" step="1">
+		</label>
+		<br>
+		<label> Y POS : <span id="yPosVal"> 512</span>
+		<input id="yPosControl" class="black" type="range"/ max="1024" min="0" step="1">
+		</label>
+	</div>
+	<canvas id="myCanvas" width="1024" height="1024"> </canvas>
+</body>
+
+<script type = "text/javascript"> 
+	window.onLoad = init();
+	var	canvas;
+	var context; 
+	var matrixStack;
+	var identity;
+	var model;
+	var delay = 1;
+	var firstDraw;
+	var stopped;
+
+
+	//theta is the degrees to rotate
+	var theta = 5;
+
+	function init () {
+		canvas = document.getElementById('myCanvas');
+		context = canvas.getContext('2d');
+		context.fillStyle = "#333333";
+
+		context.lineWidth = 5;
+
+		identity= mat3([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+		matrixStack = [];
+		model = {};
+		model.repositionOcurred = true;
+	
+		model.rotationMatrix = identity;
+		model.XtranslationMatrix = mat3(vec3([1,0,0]), vec3([0,1,0]), vec3([462,0,1]));
+		model.YtranslationMatrix =  mat3(vec3([1,0,0]), vec3([0,1,0]), vec3([0,462,1]));
+		model.initialScaleMatrix = mat3(vec3([3,0,0]), vec3([0,3,0]), vec3([1,1,1]));
+		
+		model.bladeRotationMatrix = identity;
+
+
+		draw();
+		stopped = false;
+		updateRotars();
+	}
+
+	function resetGeometry()
+	{
+		/*the model's base is an array of vectors */
+		model.base = [vec3([-5, -5,1]), vec3([-5,-1,1]), vec3([-35,-1,1]), vec3([-35,1,1]), vec3([-5,1,1]),  vec3([-5,5,1]), 
+		vec3([-1, 5, 1]), vec3([-1,35, 1]), vec3([1,35, 1]), vec3([1, 5, 1]), vec3([5,5,1]),
+		vec3([5, 1,1]),vec3([35, 1,1]), vec3([35, -1,1]), vec3([5, -1,1]), vec3([5,-5,1]), 
+		vec3([1, -5,1]),vec3([1, -35,1]), vec3([-1, -35,1]), vec3([-1, -5,1]), vec3([-5, -5,1]),
+		];
+
+		model.rotar = [vec3([-15, -15, 1]), vec3([10, -195, 1]), vec3([15, -15, 1]),
+		vec3([195, 10, 1]), vec3([15, 15, 1]), vec3([-20, 195, 1]),
+		vec3([-15, 15, 1]), vec3([-195, -20, 1]), vec3([-15, -15, 1])];
+
+	}
+
+	function updateRotars()
+	{
+		draw();
+		resetGeometry();
+		 context.fillStyle = "rgba(20, 20, 20, 0.8)";
+		/***DRAW ROTAR 1 *************************************/
+
+		var CTM = getRotationMatrix(theta);
+		CTM = mult(CTM, mat3(vec3([1,0,0]), vec3([0,1,0]), vec3([0,302,1])));
+
+		CTM = mult(CTM, model.rotationMatrix);
+	
+		CTM = mult(CTM, model.YtranslationMatrix);
+		CTM = mult(CTM, model.XtranslationMatrix);
+
+		//translate rotars along with base
+		for(var i = 0; i < model.rotar.length; i++)
+		{
+			var product = multMV(CTM, model.rotar[i]);
+			model.rotar[i] = product;
+		}
+
+		path = new Path2D();
+		path.moveTo(model.rotar[0][0], model.rotar[0][1]);
+		for(var i = 1; i < model.rotar.length; i++)
+		{
+		 	path.lineTo(model.rotar[i][0], model.rotar[i][1]);
+		}
+
+		context.lineWidth = 2;
+		context.fill(path);
+		context.stroke(path);
+
+		resetGeometry();
+
+		/******************ROTAR 2 **************************/
+		CTM = getRotationMatrix(theta);
+		CTM = mult(CTM, mat3(vec3([1,0,0]), vec3([0,1,0]), vec3([0,-302,1])));
+	
+			CTM = mult(CTM, model.rotationMatrix);
+	
+
+		
+		CTM = mult(CTM, model.YtranslationMatrix);
+		CTM = mult(CTM, model.XtranslationMatrix);
+
+		//translate rotars along with base
+		for(var i = 0; i < model.rotar.length; i++)
+		{
+			var product = multMV(CTM, model.rotar[i]);
+			model.rotar[i] = product;
+		}
+
+		path = new Path2D();
+		path.moveTo(model.rotar[0][0], model.rotar[0][1]);
+		for(var i = 1; i < model.rotar.length; i++)
+		{
+		 	path.lineTo(model.rotar[i][0], model.rotar[i][1]);
+		}
+		context.fill(path);
+		context.stroke(path);
+
+		resetGeometry();
+
+		/******************ROTAR 3 **************************/
+		CTM = getRotationMatrix(theta);
+		CTM = mult(CTM, mat3(vec3([1,0,0]), vec3([0,1,0]), vec3([-302,0,1])));
+
+		CTM = mult(CTM, model.rotationMatrix);
+
+		CTM = mult(CTM, model.YtranslationMatrix);
+		CTM = mult(CTM, model.XtranslationMatrix);
+
+		//translate rotars along with base
+		for(var i = 0; i < model.rotar.length; i++)
+		{
+			var product = multMV(CTM, model.rotar[i]);
+			model.rotar[i] = product;
+		}
+
+		path = new Path2D();
+		path.moveTo(model.rotar[0][0], model.rotar[0][1]);
+		for(var i = 1; i < model.rotar.length; i++)
+		{
+		 	path.lineTo(model.rotar[i][0], model.rotar[i][1]);
+		}
+		context.fill(path);
+		context.stroke(path);
+
+		resetGeometry();
+
+		/******************ROTAR 4 **************************/
+		CTM = getRotationMatrix(theta);
+		CTM = mult(CTM, mat3(vec3([1,0,0]), vec3([0,1,0]), vec3([302,0,1])));
+
+			CTM = mult(CTM, model.rotationMatrix);
+	
+		CTM = mult(CTM, model.YtranslationMatrix);
+		CTM = mult(CTM, model.XtranslationMatrix);
+
+		//translate rotars along with base
+		for(var i = 0; i < model.rotar.length; i++)
+		{
+			var product = multMV(CTM, model.rotar[i]);
+			model.rotar[i] = product;
+		}
+
+		path = new Path2D();
+		path.moveTo(model.rotar[0][0], model.rotar[0][1]);
+		for(var i = 1; i < model.rotar.length; i++)
+		{
+		 	path.lineTo(model.rotar[i][0], model.rotar[i][1]);
+		}
+		context.fill(path);
+		context.stroke(path);
+
+		setTimeout(function(){
+		
+			if(!stopped)
+			{
+							if(theta < 360)
+			{
+				theta+=5;
+			}
+			else
+			{
+				theta = 1;
+			}
+			}
+		updateRotars();
+
+	}, delay);
+	}
+
+	function draw()
+	{
+		context.fillStyle = "#293D00";
+
+		context.lineWidth = 5;
+		resetGeometry();
+		context.clearRect(0, 0, canvas.width * 2, canvas.height * 2);
+		//peform the translations
+		var CTM = mult( model.initialScaleMatrix, model.rotationMatrix);
+		CTM = mult(CTM, model.initialScaleMatrix);
+		CTM = mult(CTM, model.YtranslationMatrix);
+		CTM = mult(CTM, model.XtranslationMatrix);
+
+		matrixStack.push(CTM);
+
+		//multiply each vector in base by CTM
+		for(var i = 0; i < model.base.length; i++)
+		{
+			var product = multMV(CTM, model.base[i]);
+			model.base[i] = product;
+		}
+		
+		//draw base
+		var path = new Path2D();
+		path.moveTo(model.base[0][0], model.base[0][1]);
+		for(var i = 1; i < model.base.length; i++)
+		{
+		 	path.lineTo(model.base[i][0], model.base[i][1]);
+		}
+		context.fill(path);
+		context.stroke(path);
+	}
+
+
+
+	$("#rotationControl").change(function(){
+
+	 	var t = $(this).val();
+		$("#rotationVal").html( t + " deg");
+		model.rotationMatrix = getRotationMatrix(t);
+	
+		draw();
+	 });
+
+	$("#xPosControl").change(function(){
+
+		var xVal = $(this).val();
+		$("#xPosVal").html(xVal);
+		var xTranslate = mat3(vec3([1, 0, 0]), vec3([0, 1, 0]), vec3([xVal, 0, 1]));
+		model.XtranslationMatrix = xTranslate;
+		
+		draw();
+	});
+	
+	$("#yPosControl").change(function()
+	{
+
+		$("#yPosVal").html($(this).val());
+		var yVal = $(this).val();
+		var yTranslate = mat3(vec3([1, 0, 0]), vec3([0, 1, 0]), vec3([0, yVal, 1]));
+		model.YtranslationMatrix = yTranslate;
+		
+		draw();
+	});
+
+	$("#speedControl").change(function()
+	{
+	
+	if($(this).val() == 0)
+	{
+		stopped = true;
+	}
+	else
+	{
+		stopped = false;
+	}
+		$("#speedVal").html($(this).val());
+			delay = 105 - $(this).val();
+		
+		draw();
+	});
+
+$("body").keydown(function(e){
+    // left arrow or a key 
+    if ((e.keyCode || e.which) == 37 || (e.keyCode || e.which) == 65)
+    {   
+       document.getElementById("xPosControl").stepDown(1);
+       $("#xPosControl").trigger("change");
+    }
+    // right arrow or d key
+    if ((e.keyCode || e.which) == 39 || (e.keyCode || e.which) == 68)
+    {
+        document.getElementById("xPosControl").stepUp(1);
+       $("#xPosControl").trigger("change");
+    }   
+
+    // f key
+    if ( (e.keyCode || e.which) == 70)
+    {
+        document.getElementById("speedControl").stepUp(1);
+       $("#speedControl").trigger("change");
+    }   
+
+      // c key
+    if ( (e.keyCode || e.which) == 67)
+    {
+        document.getElementById("speedControl").stepDown(1);
+       $("#speedControl").trigger("change");
+    }   
+
+ 	// up arrow or w key
+    if ((e.keyCode || e.which) == 38 || (e.keyCode || e.which) == 87)
+    {
+        document.getElementById("yPosControl").stepDown(1);
+       $("#yPosControl").trigger("change");
+    }   
+
+     // down arrow or s key
+    if ((e.keyCode || e.which) == 40 || (e.keyCode || e.which) == 83)
+    {
+        document.getElementById("yPosControl").stepUp(1);
+       $("#yPosControl").trigger("change");
+    }  
+
+
+     // r key
+    if ((e.keyCode || e.which) == 82)
+    {
+        document.getElementById("rotationControl").stepUp(1);
+       $("#rotationControl").trigger("change");
+    }  
+
+    // e key
+    if ((e.keyCode || e.which) == 69)
+    {
+        document.getElementById("rotationControl").stepDown(1);
+       $("#rotationControl").trigger("change");
+    }  
+});
+
+
+
+</script>

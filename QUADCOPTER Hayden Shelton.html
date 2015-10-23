@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-<html> 
-<head>
+<!-- saved from url=(0054)file:///C:/Users/Hayden/Desktop/cs4600/QuadCopter.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
  	<title>QUADCOPTER Hayden Shelton</title> 
 
- 	<script type="text/javascript" src="jquery-2.1.4.js"></script>
+ 	<script type="text/javascript" src="./QUADCOPTER Hayden Shelton_files/jquery-2.1.4.js"></script>
  	
- 	<script type="text/javascript" src="MV.js"></script>
-</head> 
-
+ 	<script type="text/javascript" src="./QUADCOPTER Hayden Shelton_files/MV.js"></script>
 <style>
 		input[type=range] 
 		{
@@ -37,13 +35,13 @@
 		   
 		}
 
-
+/*
 		body
 		{
 			background-image: url("diamonds.png");
 		}
 
-		
+		*/
 		div.control-box
 		{
 			position: absolute;
@@ -62,7 +60,6 @@
 			top:60px;
 			width: 350px;
 			left:30px;
-			color:white;
 		
 		}
 
@@ -102,7 +99,9 @@
  		 background: #000000;
 		}
 
-</style>
+</style></head> 
+
+
 
 
 <body>
@@ -118,19 +117,19 @@
 
 <div class="control-box">
 <label> Speed : <span id="speedVal"> 50</span>
-<input id="speedControl" class="blue" type="range"/ max="100" min="0" step="1" >
+<input id="speedControl" class="blue" type="range" max="100" min="0" step="1">
 </label>
 <br>
 <label> Rotation : <span id="rotationVal"> 0 deg</span>
-<input id="rotationControl" class="green" type="range"/ max="360" min="-360" step="1">
+<input id="rotationControl" class="green" type="range" max="360" min="-360" step="1">
 </label>
 <br>
-<label> X POS : <span id="xPosVal"> 512</span>
-<input id="xPosControl" class="black" type="range"/ max="1024" min="0" step="1">
+<label> X POS : <span id="xPosVal">540</span>
+<input id="xPosControl" class="black" type="range" max="1024" min="0" step="1">
 </label>
 <br>
-<label> Y POS : <span id="yPosVal"> 512</span>
-<input id="yPosControl" class="black" type="range"/ max="1024" min="0" step="1">
+<label> Y POS : <span id="yPosVal">516</span>
+<input id="yPosControl" class="black" type="range" max="1024" min="0" step="1">
 </label>
 </div>
 
@@ -150,17 +149,14 @@
 
 
 
-</body>
 
-<script type = "text/javascript"> 
+
+<script type="text/javascript"> 
 	
 	window.onLoad = init();
 	var context;
 	var canvas;
 	var mStack;
-	var xTransform1;
-	var yTransform1;
-	var rotation1;
 
 	var copterBaseModel;
 /*
@@ -178,14 +174,9 @@
 	canvas = document.getElementById('myCanvas');
 	context = canvas.getContext('2d');
 
-	xTransform1 = mat3([1, 0, 0, 0, 1, 0, 0, 0, 1]));
-	yTransform1 = mat3([1, 0, 0, 0, 1, 0, 0, 0, 1]));
-	rotation1 = mat3([1, 0, 0, 0, 1, 0, 0, 0, 1]));
-
 	//push identity matrix onto transformation matrix stack
 	mStack = [];
 	mStack.push(mat3([1, 0, 0, 0, 1, 0, 0, 0, 1]));
-
 
 	resetModel();
 
@@ -210,19 +201,11 @@
 	function draw() {
  	context.clearRect(0, 0, canvas.width * 2, canvas.height * 2);
 
-		context.fillStyle = "#5C8533";
+		context.fillStyle = "#000";
 
-
-		var matrix = mStack.pop();
-
-		//the matrix we'll transform by is the product of the matrix stack
-		for(var i = 0; i < mStack.length; i++)
-		{
-			matrix = mult(matrix, mStack.pop());
-		}
 
 	//perform the transformations by multiplying the CTM
-		var CTM = matrix;
+		var CTM = mStack.pop();
 
 		
 		for(var i = 0; i < copterBaseModel.base.length; i++)
@@ -296,21 +279,8 @@
 	$("#rotationControl").change(function()
 	{
 		$("#rotationVal").html($(this).val() + " deg");
-		var deg = $(this).val();
-
-        var c = Math.cos(deg);
-        var s = Math.sin(deg);
-
-
-
-        var rotation = mat3(vec3([c, s, 0]), vec3([s * -1 , c, 0]), vec3([0, 0, 1]));
-
-
-        mStack.push(rotation);
-
-        draw();
 	});
-
+		
 	$("#xPosControl").change(function()
 	{
 		resetModel();
@@ -345,4 +315,4 @@
 	});
 </script>
 
-</html>
+</body></html>
