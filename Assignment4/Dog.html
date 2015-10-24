@@ -9,10 +9,12 @@
 
 
 
-<script id="vertex-shader" >
-attribute  vec4 vPosition;
-attribute  vec4 vColor;
-varying vec4 fColor;
+<script id="vertex-shader"type="x-shader/x-fragment" >
+attribute vec4 vPosition;
+attribute vec4 vNormal;
+attribute  vec4 vertexColor;
+varying vec4 fragmentColor;
+
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -22,9 +24,8 @@ uniform mat4 projectionMatrix;
 
 void main()
 {
-
-
-    fColor = vec4( red, green, blue, 1.0 );
+	//pass the color to the fragment shader
+   	fragmentColor = vertexColor;
     gl_Position = projectionMatrix * modelViewMatrix * vPosition;
 }
 </script>
@@ -33,16 +34,16 @@ void main()
 
 precision mediump float;
 
-varying  vec4 fColor;
+varying  vec4 fragmentColor;
 
 void main()
 {
-    gl_FragColor = fColor;
+    gl_FragColor = fragmentColor;
 }
 </script>
 
 <body>
-<canvas id="gl-canvas" width="512" height="512">
+<canvas id="gl-canvas" style="background-color:black;" width="512" height="512">
 Sorry. Your browser doesn't support WebGL.
 </canvas>
 </body>
