@@ -16,8 +16,7 @@ var up = vec3(0.0, 1.0, 1.0);
 var pointsArray = [];
 var normalsArray = [];
 var planeArray = [];
- var vertexColors = [];
-
+var vertexColors = [];
 
 var va = vec4(0.0, 0.0, -1.0,1);
 var vb = vec4(0.0, 0.942809, 0.333333, 1);
@@ -46,29 +45,27 @@ function plane()
 	var c = vec4( 1.5, 0.5,  -1.5, 1.0 );
 	var d = vec4( -1.5,  0.5,  1.5, 1.0 );
 
-   pointsArray.push(vec4( -2.5, -1.5,  -0.5, 1.0 ));
+    //rear left
+    pointsArray.push(vec4( 0, -1.5,  -0.5, 1.0 ));
+    //front left
     pointsArray.push(vec4( -2.5,  -2.5,  0.5, 1.0 ));
-    pointsArray.push(vec4( 2.5, -2.5,  0.5, 1.0 ));
-    pointsArray.push(vec4( 2.5,  -1.5,  -0.5, 1.0 ));
 
+    //front right
+    pointsArray.push(vec4( 2.5, -2.5,  0.5, 1.0 ));
+
+    //rear right
+    pointsArray.push(vec4( 0.0,  -1.5,  -0.5, 1.0 ));
 
     pointsArray.push(d);
     pointsArray.push(d);
 
     index+=6;
 
-
-
-
-       normalsArray.push(a[0],a[1], a[2], 0.0);
-     normalsArray.push(b[0],b[1], b[2], 0.0);
-     normalsArray.push(c[0],c[1], c[2], 0.0);
-		normalsArray.push(d[0],d[1], d[2], 0.0);
+    normalsArray.push(a[0],a[1], a[2], 0.0);
+    normalsArray.push(b[0],b[1], b[2], 0.0);
+    normalsArray.push(c[0],c[1], c[2], 0.0);
+	normalsArray.push(d[0],d[1], d[2], 0.0);
     
-
-
-
-
 }
 function triangle(a, b, c) {
 
@@ -83,7 +80,6 @@ function triangle(a, b, c) {
      normalsArray.push(c[0],c[1], c[2], 0.0);
 
      index += 3;
-
 }
 
 
@@ -131,7 +127,6 @@ window.onload = function init() {
 
     gl.enable(gl.DEPTH_TEST);
 
-
 	vertexColors.push(vec4(0.2, 0.7, 0.35, 1));
 	vertexColors.push(vec4(0.2, 0.7, 0.35, 1));
 	vertexColors.push(vec4(0.2, 0.7, 0.35, 1));
@@ -171,10 +166,6 @@ window.onload = function init() {
     var vBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, vBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(pointsArray), gl.STATIC_DRAW);
-
-
-
-
 
     var vPosition = gl.getAttribLocation( program, "vPosition");
     gl.vertexAttribPointer(vPosition, 4, gl.FLOAT, false, 0, 0);
@@ -249,13 +240,7 @@ function drawSphere(_ctm)
 
 function drawDog()
 {
-
-	
-	    	 gl.drawArrays( gl.TRIANGLE_FAN, 0, 4 );
-	    
-
-	
-
+    gl.drawArrays( gl.TRIANGLE_FAN, 0, 4 );
 	drawBody();
 	drawHead();
 	drawTail();
@@ -270,8 +255,6 @@ function drawBody()
 	var temp = mult(modelViewMatrix, scaleMatrix);
 	CTM.push(temp);
     drawSphere(temp);
-    
-
 }
 
 function drawHead()
@@ -312,13 +295,6 @@ function drawTail()
 
 	var translateMatrix = translate(-1.8, 1.65, 2)
 	temp = mult(temp, translateMatrix);
-
-
-
-
-
-
-
 
 	drawSphere(temp);
 	CTM.push(ct);
