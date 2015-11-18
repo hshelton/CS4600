@@ -12,13 +12,24 @@
 attribute vec4 vPosition;
 attribute vec4 vNormal;
 attribute  vec4 vertexColor;
+
+//vertex texture coordinate
+attribute  vec2 vTexCoord;
+
+//fragment texture coordinate
+varying vec2 fTexCoord;
+
+
 varying vec4 fragmentColor;
+varying vec4 fragmentAmbient;
+varying vec4 fragmentDiffuse;
+varying vec4 fragmentSpecular;
+
 uniform mat3 normalMatrix;
 
 uniform vec4 ambientProduct, diffuseProduct, specularProduct;
 uniform float shininess;
 uniform vec3 eyePosition;
-
 
 
 uniform mat4 modelViewMatrix;
@@ -29,35 +40,28 @@ uniform vec4 lightPosition;
 
 void main()
 {
-	
 
+	/* Gouraud lighting */
 
     // pos is vertex position in eye coordinates
-
     vec3 pos = (modelViewMatrix * vPosition).xyz;
 
     // vector from vertex position to light source
-
     vec3 L;
 
     // check for directional light
-
     if(lightPosition.w == 0.0) L = normalize((modelViewMatrix*lightPosition).xyz);
     else L = normalize( (modelViewMatrix*lightPosition).xyz - pos );
 
     // Because the eye point the is at the orgin
     // the vector from the vertex position to the eye is
-
     vec3 E = -normalize( pos );
 
     // halfway vector
-
     vec3 H = normalize( L + E );
 
     // Transform vertex normal into eye coordinates
-
    vec3 N = normalize( normalMatrix*vNormal.xyz);
-
 
     // Compute terms in the illumination equation
     vec4 ambient = ambientProduct;
@@ -74,9 +78,16 @@ void main()
 
     fragmentColor = ambient + diffuse +specular;
 
+    fragmentAmbient = ambient;
+    fragmentDiffuse = diffuse;
+    fragmentSpecular = specular;
+
     fragmentColor.a = 1.0;
 
-        gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+    fTexCoord = vTexCoord;
+
+    
+    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
 
 }
 </script>
@@ -85,11 +96,24 @@ void main()
 
 precision mediump float;
 
+varying vec4 fragmentAmbient;
+varying vec4 fragmentSpecular;
+varying vec4 fragmentDiffuse;
+
 varying  vec4 fragmentColor;
+
+varying vec2 fTexCoord;
+
+
+uniform float useTexture;
+uniform sampler2D texture;
 
 void main()
 {
-    gl_FragColor = fragmentColor;
+   // gl_FragColor = fragmentAmbient + fragmentDiffuse + fragmentSpecular;
+    if(useTexture <1.0) gl_FragColor = fragmentColor;
+    else gl_FragColor = fragmentColor * texture2D( texture, fTexCoord );
+
 }
 </script>
 
@@ -105,6 +129,7 @@ void main()
 <canvas id="gl-canvas" style="background-color:black;" width="512" height="512">
 Sorry. Your browser doesn't support WebGL.
 </canvas>
+<img id = "texImage" src = "selfie2.gif" hidden></img>
 	<div class="control-box">
 		<div>
 		<label>Light: X</label>
@@ -164,7 +189,17 @@ Sorry. Your browser doesn't support WebGL.
 		 min="-100" max="100" step="1" value="0" />
 		</div>
 
+		<div>
+		<br>
+		<label>Use Texture </label>
+		<input type ="checkbox" id="useTexture">
+		<small>*slower renders </small>
+		</div>
 
+		<div>
+		<label> Texture Blend </label>
+		<input type="range" class="purple" value ="0" step="1" min="0" max="100"/>
+		</div>
 
 
 </div>

@@ -86,6 +86,11 @@ input[type=range]
 	 	background: #000;
 	} 
 
+	input[type=range].purple::-moz-range-track {
+	 	background: purple;
+	} 
+
+
 		input[type=range].blue::-webkit-slider-runnable-track{
  		 background: #367ebd;
 		}
@@ -95,8 +100,12 @@ input[type=range]
  		 background: #00CC66;
 		}
 
-			input[type=range].black::-webkit-slider-runnable-track {
+		input[type=range].black::-webkit-slider-runnable-track {
  		 background: #000000;
+		}
+
+		input[type=range].purple::-webkit-slider-runnable-track {
+ 		 background: purple
 		}
 
 	canvas

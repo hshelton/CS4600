@@ -8,6 +8,24 @@
 		var modelViewMatrixLoc, projectionMatrixLoc;
 		var normalMatrix, normalMatrixLoc;
 		var planeDrawn = false;
+		var texCoordsArray = [];
+		var pi = 3.141592654;
+
+		var texture;
+
+		var texCoord = [
+		 	vec2(0,0),
+		 	vec2(0,1),
+		 	vec2(1,1),
+		 	vec2(0,1)
+		];
+
+		var minX = 1;
+		var maxX = -1;
+		var minY = 99;
+		var maxY = -1;
+
+		var skip_TC = false;
 		/*-------------------------------------------------------*/
 
 
@@ -34,7 +52,6 @@
 		*/
 		//specify how many triangles make the spheres (how smooth)
 		var numTimesToSubdivide = 5;
-
 		//pointer for position in vertex array
 		var index = 0;
 		var xPos = 0;
@@ -63,7 +80,7 @@
 		*
 		*/
 
-		var lightX = 4;
+		var lightX = 1;
 		var lightY = 3;
 		var lightZ = 2;
 		var lightAmbient = vec4(1.0, 1.0, 1.0, 1.0 );
@@ -88,7 +105,7 @@
 			ambient: vec4(0.0215, 0.1745, 0.0215, 0.55),
 			diffuse: vec4(0.07568, 0.61424, 0.07568, 0.55),
 			specular: vec4(0.633, 0.727811, 0.633, 0.55),
-			shininess: 1.0
+			shininess: 15.0
 		};
 
 		var rubyMaterial = {
@@ -131,6 +148,7 @@
 		}
 	
 		var currentShininessLoc, currentAbmientLoc, currentDiffuseLoc, currentSpecularLoc;
+		var useTextureLoc;
 		var lightLoc;
 		/*-------------------------------------------------------*/
 
@@ -174,8 +192,12 @@
 		normalsArray.push(b[0], b[1], b[2], 0.0);
 		normalsArray.push(c[0], c[1], c[2], 0.0);
 		normalsArray.push(d[0], d[1], d[2], 0.0);
+				normalsArray.push(d[0], d[1], d[2], 0.0);
 		normalsArray.push(d[0], d[1], d[2], 0.0);
-		normalsArray.push(d[0], d[1], d[2], 0.0);
+
+
+
+
 		}
 
 		function triangle(a, b, c) {
@@ -190,7 +212,39 @@
 		normalsArray.push(b[0], b[1], b[2], 0.0);
 		normalsArray.push(c[0], c[1], c[2], 0.0);
 
+
+
 		index += 3;
+
+		if(skip_TC == false)
+		{
+			var aX = 0.5 +  (a[0] /2);
+			var aY = 0.5 + (a[1] /2);
+
+			var bX = 0.5 + (b[0] /2);
+			var bY =  0.5 + (b[1] /2)
+
+			var cX = 0.5 + (c[0] /2);
+			var cY = 0.5 + (c[1] /2);
+
+
+
+			if(Math.abs(aY - 0) < 0.001)
+			{
+				aY = 0;
+			}
+		
+
+		texCoordsArray.push(vec2(aX, aY));
+		texCoordsArray.push(vec2(bX, bY));
+		texCoordsArray.push(vec2(cX, cY));
+
+
+		}
+
+
+		
+		
 		}
 
 		//******* Code for sphere taken from Ed Angel's examples
@@ -291,6 +345,7 @@
    		currentAbmientLoc = gl.getUniformLocation(program, "ambientProduct");
    		currentDiffuseLoc =gl.getUniformLocation(program, "diffuseProduct");
    		currentSpecularLoc = gl.getUniformLocation(program, "specularProduct");
+   		useTextureLoc = gl.getUniformLocation(program, "useTexture");
 
 
 		gl.uniform4fv( gl.getUniformLocation(program, "ambientProduct"),flatten(ambientProduct) );
@@ -302,6 +357,23 @@
 
 
 		gl.uniform1f( currentShininessLoc, emeraldMaterial.shininess );
+		gl.uniform1f(useTextureLoc, 0.0);
+
+
+	
+		//set up texture coordinates
+		var tBuffer = gl.createBuffer();
+	    gl.bindBuffer( gl.ARRAY_BUFFER, tBuffer );
+	    gl.bufferData( gl.ARRAY_BUFFER, flatten(texCoordsArray), gl.STATIC_DRAW );
+
+	    var vTexCoord = gl.getAttribLocation( program, "vTexCoord" );
+	    gl.vertexAttribPointer( vTexCoord, 2, gl.FLOAT, false, 0, 0 );
+	    gl.enableVertexAttribArray( vTexCoord );
+
+	    var image = document.getElementById("texImage");
+   		configureTexture( image );
+
+   
 		render();
 		}
 
@@ -370,7 +442,7 @@
 		modelViewMatrix = lookAt(eye, at, up);
 
 		//eighty degree frustrum
-		projectionMatrix = perspective(80, 1, near, far);
+		projectionMatrix = perspective(90, 1, near, far);
 
 		//normal matrix for non uniform scaling
 		normalMatrix = [
@@ -383,9 +455,35 @@
 		gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
 		gl.uniformMatrix3fv(normalMatrixLoc, false, flatten(normalMatrix));
 		
+		//draw large sphere for texture shading
+		
+		var sphereMatrix = mult(scalem(2, 2, 2), translate(3, -1, -1));
 		planeDrawn = false;
+		drawSphere(sphereMatrix);
+		planeDrawn = true;
+		numTimesToSubdivide = 4;
+		
 		drawDog();
+
+	
 		}
+
+
+	//this code will set up a texture from an image
+	function configureTexture( image ) {
+	    texture = gl.createTexture();
+	    gl.bindTexture( gl.TEXTURE_2D, texture );
+	    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+	    gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGB,
+	         gl.RGB, gl.UNSIGNED_BYTE, image );
+	    gl.generateMipmap( gl.TEXTURE_2D );
+	    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
+	                      gl.NEAREST_MIPMAP_LINEAR );
+	    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST );
+
+	    gl.uniform1i(gl.getUniformLocation(program, "texture"), 0);
+	}
+
 
 
 		//draw a sphere, and if it's the first one, draw the plane
@@ -393,20 +491,27 @@
 		var temp = modelViewMatrix;
 		var m = mult(modelViewMatrix, _ctm);
 		if (planeDrawn == false) {
-
-		    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+			setMaterial(grassMaterial);
+		    gl.drawArrays(gl.TRIANGLE_FAN, 0,4);
 		    planeDrawn = true;
 		    setMaterial(pearlMaterial);
-		}
 
+		    //tell fragment shader to use texture
+		    gl.uniform1f(useTextureLoc, 1.0);
+
+		}
+		else
+		{
+			//tell fragment shader not to use texture
+			gl.uniform1f(useTextureLoc, 0.0);
+			  skip_TC = true;
+		}
 
 		gl.uniformMatrix4fv(modelViewMatrixLoc, false, flatten(m));
 
-		
-
 		for (var i = 6; i <index; i += 3) {
 
-		    gl.drawArrays(gl.TRIANGLES, i, 3);
+		    gl.drawArrays(gl.TRIANGLE_FAN,i, 3);
 
 			}
 		}
@@ -414,7 +519,7 @@
 		//traverse the heirarchy and apply the correct transformations relative to eachother to draw the dog
 		function drawDog() {
 
-
+		setMaterial(pearlMaterial);
 		drawBody();
 
 		setMaterial(emeraldMaterial);
@@ -449,7 +554,7 @@
 		mat = mult(mult(translateMatrix, scaleMatrix), initialDirection);
 
 		CTM.push(mat);
-		setMaterial(grassMaterial);
+	
 		drawSphere(mat);
 
 		drawLight();
