@@ -49,13 +49,10 @@ void main()
     // vector from vertex position to light source
     vec3 L;
 
-    // check for directional light
-    if(lightPosition.w == 0.0) L = normalize((modelViewMatrix*lightPosition).xyz);
-    else L = normalize( (modelViewMatrix*lightPosition).xyz - pos );
+   L = normalize( (modelViewMatrix*lightPosition).xyz - pos );
 
-    // Because the eye point the is at the orgin
-    // the vector from the vertex position to the eye is
-    vec3 E = -normalize( pos );
+
+    vec3 E = pos;
 
     // halfway vector
     vec3 H = normalize( L + E );
@@ -70,11 +67,9 @@ void main()
     vec4  diffuse = Kd*diffuseProduct;
 
     float Ks = pow( max(dot(N, H), 0.0), shininess );
-    vec4  specular = Ks * specularProduct;
+    vec4  specular = Ks * (specularProduct);
 
-    if( dot(L, N) < 0.0 ) {
-	specular = vec4(0.0, 0.0, 0.0, 1.0);
-    }
+
 
     fragmentColor = ambient + diffuse +specular;
 
@@ -106,14 +101,36 @@ varying vec2 fTexCoord;
 
 
 uniform float useTexture;
+uniform float textureBlend;
+
 uniform sampler2D texture;
 
 void main()
 {
    // gl_FragColor = fragmentAmbient + fragmentDiffuse + fragmentSpecular;
     if(useTexture <1.0) gl_FragColor = fragmentColor;
-    else gl_FragColor = fragmentColor * texture2D( texture, fTexCoord );
+    else
+    {
 
+    	gl_FragColor = fragmentColor * texture2D( texture, fTexCoord ) ;
+
+    	
+ 		if(textureBlend == 1.0)
+    	{
+    		gl_FragColor = gl_FragColor + fragmentColor;
+    	}
+
+    	if(textureBlend == 2.0)
+    	{
+    		gl_FragColor = gl_FragColor + fragmentColor + fragmentColor;
+    	}
+
+    	 if(textureBlend == 3.0)
+    	{
+
+    		gl_FragColor = gl_FragColor + fragmentColor + fragmentColor + fragmentColor;
+    	}
+    }
 }
 </script>
 
@@ -147,6 +164,12 @@ Sorry. Your browser doesn't support WebGL.
 		<label>Light: Z</label>
 		<input id="lightZSlider" class="blue" type="range"
 		 min="-10.0" max="10.0" step="0.5" value="0.0" />
+		</div>
+
+		<div>
+		<label>Light: Intensity</label>
+		<input id="lightIntensitySlider" class="blue" type="range"
+		 min="1.0" max="5.0" step="0.5" value="1.0" />
 		</div>
 
 		<div>
@@ -189,16 +212,15 @@ Sorry. Your browser doesn't support WebGL.
 		 min="-100" max="100" step="1" value="0" />
 		</div>
 
-		<div>
-		<br>
-		<label>Use Texture </label>
-		<input type ="checkbox" id="useTexture">
-		<small>*slower renders </small>
-		</div>
 
 		<div>
 		<label> Texture Blend </label>
-		<input type="range" class="purple" value ="0" step="1" min="0" max="100"/>
+		<input id="textureBlendSlider" type="range" class="purple" value ="0" step="1" min="0" max="3"/>
+		</div>
+
+		<div>
+		<label> Follow Viewer </label>
+		<input id="followViewer" type="checkbox" checked="false"/>
 		</div>
 
 

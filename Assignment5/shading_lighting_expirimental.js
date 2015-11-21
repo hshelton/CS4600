@@ -8,7 +8,6 @@
 		var modelViewMatrixLoc, projectionMatrixLoc;
 		var normalMatrix, normalMatrixLoc;
 		var planeDrawn = false;
-		var followViewer = false;
 		var texCoordsArray = [];
 		var pi = 3.141592654;
 
@@ -36,7 +35,7 @@
 		var eye;
 		var eyeX = 0.0;
 		var eyeY = 0.0;
-		var eyeZ = 10.0;
+		var eyeZ = 8.0;
 		var at;
 		var atX = 1.0;
 		var atY = 0.0;
@@ -84,7 +83,6 @@
 		var lightX = 1;
 		var lightY = 3;
 		var lightZ = 2;
-		var lightIntensity = 1.0;
 		var lightAmbient = vec4(1.0, 1.0, 1.0, 1.0 );
 		var lightDiffuse = vec4( 0.8, 1.0, 1.0, 1.0 );
 		var lightSpecular = vec4( 1, 1.0, 1.0, 1.0 );
@@ -126,10 +124,10 @@
 
 		var lightMaterial = 
 		{
-			ambient: vec4(0.1, 0.1, 0.1, 0),
-			diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-			specular: vec4(0, 0,0, 0),
-			shininess: 1
+			ambient: vec4(0.9, 0.9, 0.9, 0.9),
+			diffuse: vec4(1.0, 0.829, 0.829, 0.922),
+			specular: vec4(0.9, 0.9, 0.296648, 0.922),
+			shininess: 99
 		}
 
 
@@ -150,9 +148,8 @@
 		}
 	
 		var currentShininessLoc, currentAbmientLoc, currentDiffuseLoc, currentSpecularLoc;
-		var useTextureLoc, textureBlendLoc;
+		var useTextureLoc;
 		var lightLoc;
-		var textureBlend = 0.0;
 		/*-------------------------------------------------------*/
 
 
@@ -343,7 +340,6 @@
    		currentDiffuseLoc =gl.getUniformLocation(program, "diffuseProduct");
    		currentSpecularLoc = gl.getUniformLocation(program, "specularProduct");
    		useTextureLoc = gl.getUniformLocation(program, "useTexture");
-   		textureBlendLoc = gl.getUniformLocation(program, "textureBlend");
 
 
 		gl.uniform4fv( gl.getUniformLocation(program, "ambientProduct"),flatten(ambientProduct) );
@@ -357,7 +353,6 @@
 		gl.uniform1f( currentShininessLoc, emeraldMaterial.shininess );
 		gl.uniform1f(useTextureLoc, 0.0);
 
-		gl.uniform1f(textureBlendLoc, 0.0);
 
 	
 		//set up texture coordinates
@@ -390,13 +385,6 @@
 
 		document.getElementById("lightZSlider").onchange = function (event) {
 		lightZ = parseFloat(event.target.value);
-		render();
-		};
-
-		document.getElementById("lightIntensitySlider").onchange = function (event) {
-		lightIntensity = parseFloat(event.target.value);
-
-
 		render();
 		};
 
@@ -436,57 +424,8 @@
         render();
     };
 
-    document.getElementById("textureBlendSlider").onchange = function(event)
-    {
-    	textureBlend = parseFloat(event.target.value);
-    	render();
-    }
+   
 
-    document.getElementById("followViewer").onchange = function(event)
-    {
-    	followViewer = !followViewer;
-    	render();
-    }
-    document.getElementById('body').onkeydown = function (event) {
-     
-     //reset all the values when r is pushed
-        if (event.keyCode == 82) {
-
-       		lightX = 1;
-			lightY = 3;
-			lightZ = 2;
-	   		eyeX = 0.0;              
-			eyeY = 0.0;
-			eyeZ = 10.0;
-			atX = 1.0;
-			atY = 0.0;
-			atZ = 0.0;
-			userDirection = 360;
-
-			lightIntensity = 1.0;
-
-			lightMaterial = 
-		{
-			ambient: vec4(0.1, 0.1, 0.1, 0),
-			diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-			specular: vec4(0, 0,0, 0),
-			shininess: 1
-		}
-
-		textureBlend = 0.0;
-
-			render();
-			
-        }
-
-
-     }
-
-     //moves the sliders back to their original values
-     function triggerResetEvents()
-     {
-     	document.getElementById("atXSlider").value = "";
-     }
 
 		//render is recursively called to keep drawing the scene
 		var render = function () {
@@ -511,39 +450,14 @@
 		gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
 		gl.uniformMatrix3fv(normalMatrixLoc, false, flatten(normalMatrix));
 		
-		//set the amount to blend the texture
-		gl.uniform1f(textureBlendLoc, textureBlend);
-
-		
-		if(followViewer)
-		{
-
-			lightX = eyeX;
-			lightY = eyeY;
-			lightZ = eyeZ;
-		}
-
-
 		//draw large sphere for texture shading
-		var sphereMatrix = mult(scalem(3, 3, 3), translate(3, -0.6, -2));
+		
+		var sphereMatrix = mult(scalem(3, 3, 3), translate(3, -0.6, -1));
 		planeDrawn = false;
 		drawSphere(sphereMatrix);
 		planeDrawn = true;
+
 		
-		//update the appearance of the lighting and the light itself
-		lightAmbient = vec4(lightIntensity, lightIntensity, lightIntensity, 1.0);
-		
-		var lightMaterialAmbient = (lightIntensity * 2) /10;
-
-		lightMaterial = 
-		{
-			ambient: vec4(lightMaterialAmbient, lightMaterialAmbient, lightMaterialAmbient, 0),
-			diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-			specular: vec4(0, 0,0, 0),
-			shininess: 1
-		}
-
-
 		drawDog();
 
 	
@@ -617,13 +531,13 @@
 		function drawLight()
 		{
 
-			var mat = mult(scalem(0.5, 0.5, 0.5), translate(lightX, lightY, lightZ));
+			var mat = translate(lightX, lightY, lightZ);
 
 			//gl.uniform4fv(lightLoc, false, flatten(mat));
 
 			setMaterial(lightMaterial);
 			drawSphere(mat);
-			gl.uniform4fv(lightLoc ,flatten(vec4(lightX, lightY, lightZ)) );
+		gl.uniform4fv(lightLoc ,flatten(vec4(lightX, lightY, lightZ)) );
 		}
 
 		function drawBody() {
