@@ -52,7 +52,7 @@
 		*
 		*/
 		//specify how many triangles make the spheres (how smooth)
-		var numTimesToSubdivide = 5;
+		var numTimesToSubdivide = 6;
 		//pointer for position in vertex array
 		var index = 0;
 		var xPos = 0;
@@ -150,9 +150,10 @@
 		}
 	
 		var currentShininessLoc, currentAbmientLoc, currentDiffuseLoc, currentSpecularLoc;
-		var useTextureLoc, textureBlendLoc;
+		var useTextureLoc, textureBlendLoc, fragmentLightingLoc;
 		var lightLoc;
 		var textureBlend = 0.0;
+		var fragmentLighting = 0.0;
 		/*-------------------------------------------------------*/
 
 
@@ -170,6 +171,7 @@
 			gl.uniform4fv( currentAbmientLoc,flatten(ambientProduct) );
 			gl.uniform4fv( currentDiffuseLoc,flatten(diffuseProduct) );
 			gl.uniform4fv( currentSpecularLoc,flatten(specularProduct) );
+
 		}
 
 		//a plane for the dog to walk on
@@ -198,9 +200,6 @@
 		normalsArray.push(d[0], d[1], d[2], 0.0);
 		normalsArray.push(d[0], d[1], d[2], 0.0);
 
-
-
-
 		}
 
 		function triangle(a, b, c) {
@@ -210,37 +209,35 @@
 		pointsArray.push(b);
 		pointsArray.push(c);
 
-		// normals are vectors
+
+
+		index += 3;
+
+
+		if(skip_TC == false){
+		
+				var aX = 0.5 +  (a[0] /2);
+				var aY = 0.5 + (a[1] /2);
+
+				var bX = 0.5 + (b[0] /2);
+				var bY =  0.5 + (b[1] /2)
+
+				var cX = 0.5 + (c[0] /2);
+				var cY = 0.5 + (c[1] /2);
+
+			texCoordsArray.push(vec2(aX, aY));
+			texCoordsArray.push(vec2(bX, bY));
+			texCoordsArray.push(vec2(cX, cY));
+
+
+		
+		}
 		normalsArray.push(a[0], a[1], a[2], 0.0);
 		normalsArray.push(b[0], b[1], b[2], 0.0);
 		normalsArray.push(c[0], c[1], c[2], 0.0);
 
-		index += 3;
-
-		if(skip_TC == false)
-		{
-			var aX = 0.5 +  (a[0] /2);
-			var aY = 0.5 + (a[1] /2);
-
-			var bX = 0.5 + (b[0] /2);
-			var bY =  0.5 + (b[1] /2)
-
-			var cX = 0.5 + (c[0] /2);
-			var cY = 0.5 + (c[1] /2);
-
-
-
-
-
-		texCoordsArray.push(vec2(aX, aY));
-		texCoordsArray.push(vec2(bX, bY));
-		texCoordsArray.push(vec2(cX, cY));
-
-
-		}
-
-
 		
+
 		
 		}
 
@@ -342,13 +339,18 @@
    		currentAbmientLoc = gl.getUniformLocation(program, "ambientProduct");
    		currentDiffuseLoc =gl.getUniformLocation(program, "diffuseProduct");
    		currentSpecularLoc = gl.getUniformLocation(program, "specularProduct");
+
    		useTextureLoc = gl.getUniformLocation(program, "useTexture");
    		textureBlendLoc = gl.getUniformLocation(program, "textureBlend");
-
+   		fragmentLightingLoc = gl.getUniformLocation(program, "useFragment");
 
 		gl.uniform4fv( gl.getUniformLocation(program, "ambientProduct"),flatten(ambientProduct) );
+
 		gl.uniform4fv( gl.getUniformLocation(program, "diffuseProduct"),flatten(diffuseProduct) );
+	
 		gl.uniform4fv( gl.getUniformLocation(program, "specularProduct"),flatten(specularProduct) );
+
+
 		lightLoc = gl.getUniformLocation(program, "lightPosition");
 		gl.uniform4fv(lightLoc ,flatten(vec4(lightX, lightY, lightZ)) );
 		
@@ -358,6 +360,8 @@
 		gl.uniform1f(useTextureLoc, 0.0);
 
 		gl.uniform1f(textureBlendLoc, 0.0);
+
+		gl.uniform1f(fragmentLightingLoc, 0.0);
 
 	
 		//set up texture coordinates
@@ -447,6 +451,20 @@
     	followViewer = !followViewer;
     	render();
     }
+
+      document.getElementById("useFragment").onchange = function(event)
+    {
+    	if(fragmentLighting == 1.0)
+    	{
+    		fragmentLighting = 0.0;
+    	}
+    	else
+    	{
+    		fragmentLighting = 1.0;
+    	}
+    	render();
+    }
+
     document.getElementById('body').onkeydown = function (event) {
      
      //reset all the values when r is pushed
@@ -514,6 +532,8 @@
 		//set the amount to blend the texture
 		gl.uniform1f(textureBlendLoc, textureBlend);
 
+		//set whether to use fragment shading or not
+		gl.uniform1f(fragmentLightingLoc, fragmentLighting);
 		
 		if(followViewer)
 		{

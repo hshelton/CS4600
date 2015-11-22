@@ -25,6 +25,20 @@ varying vec4 fragmentAmbient;
 varying vec4 fragmentDiffuse;
 varying vec4 fragmentSpecular;
 
+
+varying vec4 ambyProd;
+
+varying vec4 diffyProd;
+
+varying vec4 specyProd;
+
+varying float shiny;
+
+
+varying vec3 N, L, E;
+
+
+varying float useFrag;
 uniform mat3 normalMatrix;
 
 uniform vec4 ambientProduct, diffuseProduct, specularProduct;
@@ -37,28 +51,29 @@ uniform mat4 projectionMatrix;
 uniform mat4 planeMatrix;
 uniform vec4 lightPosition;
 
+uniform float useFragment;
+
 
 void main()
 {
+	vec4 temp;
+	    if (useFragment != 1.0)
+    {
 
-	/* Gouraud lighting */
 
     // pos is vertex position in eye coordinates
     vec3 pos = (modelViewMatrix * vPosition).xyz;
 
-    // vector from vertex position to light source
-    vec3 L;
-
-   L = normalize( (modelViewMatrix*lightPosition).xyz - pos );
-
+    // L points from the vertex to the light source
+   	vec3 L = normalize( (modelViewMatrix*lightPosition).xyz - pos );
 
     vec3 E = pos;
 
-    // halfway vector
-    vec3 H = normalize( L + E );
-
     // Transform vertex normal into eye coordinates
    vec3 N = normalize( normalMatrix*vNormal.xyz);
+
+   //reflection vector
+   vec3 R = normalize(N + L);
 
     // Compute terms in the illumination equation
     vec4 ambient = ambientProduct;
@@ -66,22 +81,45 @@ void main()
     float Kd = max( dot(L, N), 0.0 );
     vec4  diffuse = Kd*diffuseProduct;
 
-    float Ks = pow( max(dot(N, H), 0.0), shininess );
+    float Ks = pow( max(dot(N, R), 0.0), shininess );
     vec4  specular = Ks * (specularProduct);
 
-
+    if(dot(L, N) < 0.0)
+    {
+    	specular = vec4(0.0, 0.0, 0.0, 1.0);
+    }
 
     fragmentColor = ambient + diffuse +specular;
-
-    fragmentAmbient = ambient;
-    fragmentDiffuse = diffuse;
-    fragmentSpecular = specular;
-
+    temp = ambient + diffuse + specular;
+    temp.a = 1.0;
+ 
     fragmentColor.a = 1.0;
+    fTexCoord = vTexCoord;    
+   
+    }
 
-    fTexCoord = vTexCoord;
+    //do work required for fragment lighting
+    else
+    {
+    	useFrag = 1.0;
+    	 // pos is vertex position in eye coordinates
+    	vec3 pos = (modelViewMatrix * vPosition).xyz;
+    	vec3 light = lightPosition.xyz;
 
-    
+    	L = normalize(light - pos);
+    	E = normalize(pos);
+    	N = normalize((modelViewMatrix * vNormal).xyz);
+
+    	ambyProd = ambientProduct;
+    	diffyProd = diffuseProduct;
+    	specyProd = specularProduct;
+    	shiny = shininess;
+    	fTexCoord = vTexCoord;    
+
+    	fragmentColor = temp;
+
+    }
+
     gl_Position = projectionMatrix * modelViewMatrix * vPosition;
 
 }
@@ -105,33 +143,95 @@ uniform float textureBlend;
 
 uniform sampler2D texture;
 
-void main()
+varying vec4 ambyProd;
+
+varying vec4 diffyProd;
+
+varying vec4 specyProd;
+
+varying float shiny;
+
+varying vec3 N, L, E;
+varying float useFrag;
+
+
+void computeTextures(vec4 _FCOLOR)
 {
-   // gl_FragColor = fragmentAmbient + fragmentDiffuse + fragmentSpecular;
-    if(useTexture <1.0) gl_FragColor = fragmentColor;
+		
+
+	     if(useTexture <1.0) 
+     	{
+     		gl_FragColor = _FCOLOR;
+     	}
     else
     {
+    
 
-    	gl_FragColor = fragmentColor * texture2D( texture, fTexCoord ) ;
+    	gl_FragColor =  _FCOLOR * texture2D( texture, fTexCoord ) ;
 
     	
  		if(textureBlend == 1.0)
     	{
-    		gl_FragColor = gl_FragColor + fragmentColor;
+    		gl_FragColor = _FCOLOR + _FCOLOR ;
     	}
 
     	if(textureBlend == 2.0)
     	{
-    		gl_FragColor = gl_FragColor + fragmentColor + fragmentColor;
+    		gl_FragColor = _FCOLOR + _FCOLOR  + _FCOLOR ;
     	}
 
     	 if(textureBlend == 3.0)
     	{
 
-    		gl_FragColor = gl_FragColor + fragmentColor + fragmentColor + fragmentColor;
+    		gl_FragColor = gl_FragColor + _FCOLOR + _FCOLOR  + _FCOLOR;
     	}
     }
 }
+
+
+
+
+
+void main()
+{
+  
+   if(useFrag != 1.0)
+   {
+   		  computeTextures(fragmentColor);
+   }
+   else
+   {
+   		vec4 fColor;
+
+   		vec3 R = normalize(N + L);
+   		vec4 ambient = ambyProd;
+   	
+   		float Kd = max(dot(L, N), 0.0);
+
+
+   		vec4 diffuse = Kd * diffyProd;
+
+   
+ 
+   		float Ks = pow( max(dot(N, R), 0.0), shiny );
+   		vec4 specular = Ks * specyProd;
+
+   		if(dot(L, N) < 0.0)
+   		{
+   			specular = vec4(0.0, 0.0, 0.0, 1.0);
+   		}
+   		fColor = ambient + diffuse + specular;
+   		fColor.a = 1.0;
+
+   		gl_FragColor = fColor;
+   
+   		computeTextures(fColor);
+
+   	}
+
+}
+
+
 </script>
 
 <body id="body">
@@ -220,9 +320,14 @@ Sorry. Your browser doesn't support WebGL.
 
 		<div>
 		<label> Follow Viewer </label>
-		<input id="followViewer" type="checkbox" checked="false"/>
+		<input id="followViewer" type="checkbox" />
 		</div>
 
+		<div>
+		<label>Fragment Lighting </label>
+		<input id="useFragment" type="checkbox" />
+		<small> <small>(vertex is default) <small></small>
+		</div>
 
 </div>
 </body>
