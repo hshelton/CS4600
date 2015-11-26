@@ -8,7 +8,6 @@
 		var modelViewMatrixLoc, projectionMatrixLoc;
 		var normalMatrix, normalMatrixLoc;
 		var planeDrawn = false;
-		var followViewer = false;
 		var texCoordsArray = [];
 		var pi = 3.141592654;
 
@@ -36,7 +35,7 @@
 		var eye;
 		var eyeX = 0.0;
 		var eyeY = 0.0;
-		var eyeZ = 10.0;
+		var eyeZ = 8.0;
 		var at;
 		var atX = 1.0;
 		var atY = 0.0;
@@ -44,12 +43,6 @@
 		var up = vec3(0, 1.0, 0.0);
 		var near = 7;
 		var far = -12;
-
-
-		var radius = 4.0;
-		var theta  = 0.0;
-		var phi    = 0.0;
-		var useTrackball = false;
 		/*-------------------------------------------------------*/
 
 
@@ -58,7 +51,7 @@
 		*
 		*/
 		//specify how many triangles make the spheres (how smooth)
-		var numTimesToSubdivide = 6;
+		var numTimesToSubdivide = 5;
 		//pointer for position in vertex array
 		var index = 0;
 		var xPos = 0;
@@ -90,7 +83,6 @@
 		var lightX = 1;
 		var lightY = 3;
 		var lightZ = 2;
-		var lightIntensity = 1.0;
 		var lightAmbient = vec4(1.0, 1.0, 1.0, 1.0 );
 		var lightDiffuse = vec4( 0.8, 1.0, 1.0, 1.0 );
 		var lightSpecular = vec4( 1, 1.0, 1.0, 1.0 );
@@ -132,10 +124,10 @@
 
 		var lightMaterial = 
 		{
-			ambient: vec4(0.1, 0.1, 0.1, 0),
-			diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-			specular: vec4(0, 0,0, 0),
-			shininess: 1
+			ambient: vec4(0.9, 0.9, 0.9, 0.9),
+			diffuse: vec4(1.0, 0.829, 0.829, 0.922),
+			specular: vec4(0.9, 0.9, 0.296648, 0.922),
+			shininess: 99
 		}
 
 
@@ -156,10 +148,8 @@
 		}
 	
 		var currentShininessLoc, currentAbmientLoc, currentDiffuseLoc, currentSpecularLoc;
-		var useTextureLoc, textureBlendLoc, fragmentLightingLoc;
+		var useTextureLoc;
 		var lightLoc;
-		var textureBlend = 0.0;
-		var fragmentLighting = 0.0;
 		/*-------------------------------------------------------*/
 
 
@@ -177,7 +167,6 @@
 			gl.uniform4fv( currentAbmientLoc,flatten(ambientProduct) );
 			gl.uniform4fv( currentDiffuseLoc,flatten(diffuseProduct) );
 			gl.uniform4fv( currentSpecularLoc,flatten(specularProduct) );
-
 		}
 
 		//a plane for the dog to walk on
@@ -206,6 +195,9 @@
 		normalsArray.push(d[0], d[1], d[2], 0.0);
 		normalsArray.push(d[0], d[1], d[2], 0.0);
 
+
+
+
 		}
 
 		function triangle(a, b, c) {
@@ -215,35 +207,37 @@
 		pointsArray.push(b);
 		pointsArray.push(c);
 
-
-
-		index += 3;
-
-
-		if(skip_TC == false){
-		
-				var aX = 0.5 +  (a[0] /2);
-				var aY = 0.5 + (a[1] /2);
-
-				var bX = 0.5 + (b[0] /2);
-				var bY =  0.5 + (b[1] /2)
-
-				var cX = 0.5 + (c[0] /2);
-				var cY = 0.5 + (c[1] /2);
-
-			texCoordsArray.push(vec2(aX, aY));
-			texCoordsArray.push(vec2(bX, bY));
-			texCoordsArray.push(vec2(cX, cY));
-
-
-		
-		}
+		// normals are vectors
 		normalsArray.push(a[0], a[1], a[2], 0.0);
 		normalsArray.push(b[0], b[1], b[2], 0.0);
 		normalsArray.push(c[0], c[1], c[2], 0.0);
 
-		
+		index += 3;
 
+		if(skip_TC == false)
+		{
+			var aX = 0.5 +  (a[0] /2);
+			var aY = 0.5 + (a[1] /2);
+
+			var bX = 0.5 + (b[0] /2);
+			var bY =  0.5 + (b[1] /2)
+
+			var cX = 0.5 + (c[0] /2);
+			var cY = 0.5 + (c[1] /2);
+
+
+
+
+
+		texCoordsArray.push(vec2(aX, aY));
+		texCoordsArray.push(vec2(bX, bY));
+		texCoordsArray.push(vec2(cX, cY));
+
+
+		}
+
+
+		
 		
 		}
 
@@ -345,18 +339,12 @@
    		currentAbmientLoc = gl.getUniformLocation(program, "ambientProduct");
    		currentDiffuseLoc =gl.getUniformLocation(program, "diffuseProduct");
    		currentSpecularLoc = gl.getUniformLocation(program, "specularProduct");
-
    		useTextureLoc = gl.getUniformLocation(program, "useTexture");
-   		textureBlendLoc = gl.getUniformLocation(program, "textureBlend");
-   		fragmentLightingLoc = gl.getUniformLocation(program, "useFragment");
+
 
 		gl.uniform4fv( gl.getUniformLocation(program, "ambientProduct"),flatten(ambientProduct) );
-
 		gl.uniform4fv( gl.getUniformLocation(program, "diffuseProduct"),flatten(diffuseProduct) );
-	
 		gl.uniform4fv( gl.getUniformLocation(program, "specularProduct"),flatten(specularProduct) );
-
-
 		lightLoc = gl.getUniformLocation(program, "lightPosition");
 		gl.uniform4fv(lightLoc ,flatten(vec4(lightX, lightY, lightZ)) );
 		
@@ -365,9 +353,6 @@
 		gl.uniform1f( currentShininessLoc, emeraldMaterial.shininess );
 		gl.uniform1f(useTextureLoc, 0.0);
 
-		gl.uniform1f(textureBlendLoc, 0.0);
-
-		gl.uniform1f(fragmentLightingLoc, 0.0);
 
 	
 		//set up texture coordinates
@@ -403,56 +388,20 @@
 		render();
 		};
 
-		document.getElementById("lightIntensitySlider").onchange = function (event) {
-		lightIntensity = parseFloat(event.target.value);
-
-
-		render();
-		};
-
 		document.getElementById("eyeXSlider").onchange = function (event) {
-			eyeX = parseFloat(event.target.value);
-
-			render();
-			
-		
-		
+		eyeX = parseFloat(event.target.value);
+		render();
 		};
 		
 		document.getElementById("eyeYSlider").onchange = function (event) {
-
-			eyeY = parseFloat(event.target.value);
-	
-			render();
-
+		eyeY = parseFloat(event.target.value);
+		render();
 		};
-
 
 		document.getElementById("eyeZSlider").onchange = function (event) {
-
-				eyeZ = parseFloat(event.target.value);
-				render();
-
+		eyeZ = parseFloat(event.target.value);
+		render();
 		};
-
-		document.getElementById("thetaSlider").onchange = function (event) {
-	
-			theta = parseFloat(event.target.value);
-			render();
-		};
-
-		document.getElementById("phiSlider").onchange = function (event) {
-		
-			phi = parseFloat(event.target.value);
-			render();
-		};
-
-		document.getElementById("radiusSlider").onchange = function (event) {
-		
-			radius = parseFloat(event.target.value);
-			render();
-		};
-
 
 		document.getElementById("directionSlider").onchange = function (event) {
         userDirection = parseFloat(event.target.value);
@@ -475,92 +424,15 @@
         render();
     };
 
-    document.getElementById("textureBlendSlider").onchange = function(event)
-    {
-    	textureBlend = parseFloat(event.target.value);
-    	render();
-    }
+   
 
-    document.getElementById("followViewer").onchange = function(event)
-    {
-    	followViewer = !followViewer;
-    	render();
-    }
-
-      document.getElementById("useFragment").onchange = function(event)
-    {
-    	if(fragmentLighting == 1.0)
-    	{
-    		fragmentLighting = 0.0;
-    	}
-    	else
-    	{
-    		fragmentLighting = 1.0;
-    	}
-    	render();
-    }
-
-	document.getElementById("useTrackball").onchange = function(event)
-	{
-		useTrackball = !useTrackball;
-		render();
-	}
-    document.getElementById('body').onkeydown = function (event) {
-     
-     //reset all the values when r is pushed
-        if (event.keyCode == 82) {
-
-       		lightX = 1;
-			lightY = 3;
-			lightZ = 2;
-	   		eyeX = 0.0;              
-			eyeY = 0.0;
-			eyeZ = 10.0;
-			atX = 1.0;
-			atY = 0.0;
-			atZ = 0.0;
-			userDirection = 360;
-
-			lightIntensity = 1.0;
-
-			lightMaterial = 
-		{
-			ambient: vec4(0.1, 0.1, 0.1, 0),
-			diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-			specular: vec4(0, 0,0, 0),
-			shininess: 1
-		}
-
-		textureBlend = 0.0;
-
-			render();
-			
-        }
-
-
-     }
-
-     //moves the sliders back to their original values
-     function triggerResetEvents()
-     {
-     	document.getElementById("atXSlider").value = "";
-     }
 
 		//render is recursively called to keep drawing the scene
 		var render = function () {
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-		if(useTrackball)
-		{
-			eye = vec3(radius*Math.sin(theta)*Math.cos(phi),
-        	radius*Math.sin(theta)*Math.sin(phi), radius*Math.cos(theta));
-		}
-		else
-		{
-			eye = vec3(eyeX, eyeY, eyeZ);
-		}
-		
+		eye = vec3(eyeX, eyeY, eyeZ);
 		at = vec3(atX, atY, atZ);
 		modelViewMatrix = lookAt(eye, at, up);
 
@@ -578,41 +450,14 @@
 		gl.uniformMatrix4fv(projectionMatrixLoc, false, flatten(projectionMatrix));
 		gl.uniformMatrix3fv(normalMatrixLoc, false, flatten(normalMatrix));
 		
-		//set the amount to blend the texture
-		gl.uniform1f(textureBlendLoc, textureBlend);
-
-		//set whether to use fragment shading or not
-		gl.uniform1f(fragmentLightingLoc, fragmentLighting);
-		
-		if(followViewer)
-		{
-
-			lightX = eyeX;
-			lightY = eyeY;
-			lightZ = eyeZ;
-		}
-
-
 		//draw large sphere for texture shading
-		var sphereMatrix = mult(scalem(3, 3, 3), translate(3, -0.6, -2));
+		
+		var sphereMatrix = mult(scalem(3, 3, 3), translate(3, -0.6, -1));
 		planeDrawn = false;
 		drawSphere(sphereMatrix);
 		planeDrawn = true;
+
 		
-		//update the appearance of the lighting and the light itself
-		lightAmbient = vec4(lightIntensity, lightIntensity, lightIntensity, 1.0);
-		
-		var lightMaterialAmbient = (lightIntensity * 2) /10;
-
-		lightMaterial = 
-		{
-			ambient: vec4(lightMaterialAmbient, lightMaterialAmbient, lightMaterialAmbient, 0),
-			diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-			specular: vec4(0, 0,0, 0),
-			shininess: 1
-		}
-
-
 		drawDog();
 
 	
@@ -686,13 +531,13 @@
 		function drawLight()
 		{
 
-			var mat = mult(scalem(0.5, 0.5, 0.5), translate(lightX, lightY, lightZ));
+			var mat = translate(lightX, lightY, lightZ);
 
 			//gl.uniform4fv(lightLoc, false, flatten(mat));
 
 			setMaterial(lightMaterial);
 			drawSphere(mat);
-			gl.uniform4fv(lightLoc ,flatten(vec4(lightX, lightY, lightZ)) );
+		gl.uniform4fv(lightLoc ,flatten(vec4(lightX, lightY, lightZ)) );
 		}
 
 		function drawBody() {
