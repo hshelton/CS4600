@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>CS4600 Assignment 5 Hayden Shelton</title>
+</head>
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+<script type="text/javascript" src="initShaders.js"></script>
+<script type="text/javascript" src="MV.js"></script>
+
+	<link rel="stylesheet" href="style.css"/>
+
+<script id="vertex-shader"type="x-shader/x-fragment" >
+
+
+//some code copied from Ed Angel's Examples and the Textbook. No other sources were referenced. 
+	attribute vec4 vPosition;
+	attribute vec4 vNormal;
+	attribute  vec4 vertexColor;
+	//vertex texture coordinate
+	attribute  vec2 vTexCoord;
+	//fragment texture coordinate
+	varying vec2 fTexCoord;
+	varying vec4 fragmentColor;
+
+	varying vec4 ambyProd;
+	varying vec4 diffyProd;
+	varying vec4 specyProd;
+	varying float shiny;
+
+	varying vec3 N, L, E;
+	varying float useFrag;
+	uniform mat3 normalMatrix;
+	uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+	uniform float shininess;
+	uniform vec3 eyePosition;
+	uniform mat4 modelViewMatrix;
+	uniform mat4 projectionMatrix;
+	uniform mat4 planeMatrix;
+	uniform vec4 lightPosition;
+	uniform float useFragment;
+	void main()
+	{
+		vec4 temp;
+		    if (useFragment != 1.0)
+	    {
+	    // pos is vertex position in eye coordinates
+	    vec3 pos = (modelViewMatrix * vPosition).xyz;
+
+	    // L points from the vertex to the light source
+	   	vec3 L = normalize( lightPosition.xyz - pos );
+	    vec3 E = pos;
+	    // Transform vertex normal into eye coordinates
+	   vec3 N = normalize( normalMatrix*vNormal.xyz);
+
+	 	   //reflection vector
+		   vec3 R = normalize( 2.0 * dot(L, N) * N -L);
+	    // Compute terms in the illumination equation
+	    vec4 ambient = ambientProduct;
+	    float Kd = max( dot(L, N), 0.0 );
+	    vec4  diffuse = Kd*diffuseProduct;
+	    float Ks = pow( max(dot(N, R), 0.0), shininess );
+	    vec4  specular = Ks * (specularProduct);
+	    if(dot(L, N) < 0.0)
+	    {
+	    	specular = vec4(0.0, 0.0, 0.0, 1.0);
+	    }
+	    fragmentColor = ambient + diffuse +specular;
+	    temp = ambient + diffuse + specular;
+	    temp.a = 1.0;
+	 
+	    fragmentColor.a = 1.0;
+	    fTexCoord = vTexCoord;    
+	   
+	    }
+	    //do work required for fragment lighting
+	    else
+	    {
+	    	useFrag = 1.0;
+	    	 // pos is vertex position in eye coordinates
+	    	vec3 pos = (modelViewMatrix * vPosition).xyz;
+	    	vec3 light = lightPosition.xyz;
+	    	L = normalize(light - pos);
+	    	E = normalize(pos);
+	    	N = normalize( normalMatrix*vNormal.xyz);
+	    	ambyProd = ambientProduct;
+	    	diffyProd = diffuseProduct;
+	    	specyProd = specularProduct;
+	    	shiny = shininess;
+	    	fTexCoord = vTexCoord;    
+	    	fragmentColor = temp;
+	    }
+	    gl_Position = projectionMatrix * modelViewMatrix * vPosition;
+	}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+	precision mediump float;
+
+	varying  vec4 fragmentColor;
+	varying vec2 fTexCoord;
+	varying vec4 ambyProd;
+	varying vec4 diffyProd;
+	varying vec4 specyProd;
+
+	varying vec3 N, L, E;
+	varying float shiny;
+
+	varying float useFrag;
+	uniform float useTexture;
+	uniform float textureBlend;
+	uniform sampler2D texture;
+
+	void computeTextures(vec4 _FCOLOR)
+	{
+			
+		if(useTexture <1.0) 
+	    {
+	     	gl_FragColor = _FCOLOR;
+	     }
+	    else
+	    {
+	    
+	    	gl_FragColor =  _FCOLOR * texture2D( texture, fTexCoord ) ;
+	 	
+	    	
+	 		if(textureBlend >= 1.0)
+	    	{
+	    		 float perc = textureBlend * 0.1;
+	    		gl_FragColor = vec4(_FCOLOR[0] * perc, _FCOLOR[1] * perc, _FCOLOR[2] * perc, _FCOLOR[3] * perc) + vec4(gl_FragColor[0] * (1.0 - perc), gl_FragColor[1] *(1.0 - perc) , gl_FragColor[2] *(1.0 - perc), gl_FragColor[3] * (1.0 -perc));
+	    	}
+	  
+	    }
+	}
+	void main()
+	{
+	  
+	   if(useFrag != 0.0)
+	   {
+	   	vec4 fColor;
+	   		vec3 R = normalize( 2.0 * dot(L, N) * N -L);
+	   		vec4 ambient = ambyProd;
+	   	
+	   		float Kd = max(dot(L, N), 0.0);
+	   		vec4 diffuse = Kd * diffyProd;
+	   
+	 
+	   		float Ks = pow( max(dot(N, R), 0.0), shiny );
+	   		vec4 specular = Ks * specyProd;
+
+	   		fColor = ambient + diffuse + specular;
+	   		fColor.a = 1.0;
+	   		gl_FragColor = fColor;
+	   
+	   		computeTextures(fColor);
+	   	
+	   }
+	   else
+	   {
+	   			  computeTextures(fragmentColor);
+	   	}
+	}
+</script>
+
+<body id="body">
+
+<div class="headline">
+	<h2>Shading and Lighting  </h2>
+		<p>
+			Hayden Shelton CS 4600
+			Fall 2015
+		</p>
+</div>
+<canvas id="gl-canvas" style="background-color:black;" width="512" height="512">
+Sorry. Your browser doesn't support WebGL.
+</canvas>
+<img id = "texImage" src = "selfie2.gif" hidden></img>
+	<div class="control-box">
+		<div>
+		<label>Light: X</label>
+		<input id="lightXSlider" class="blue" type="range"
+		 min="-10.0" max="10.0" step="0.5" value="5.0" />
+		</div>
+		
+		<div>
+		<label>Light: Y</label>
+		<input id="lightYSlider" class="blue" type="range"
+		 min="-10.0" max="10.0" step="0.5" value="5.0" />
+		</div>
+		
+		<div>
+		<label>Light: Z</label>
+		<input id="lightZSlider" class="blue" type="range"
+		 min="-10.0" max="10.0" step="0.5" value="0.0" />
+		</div>
+
+		<div>
+		<label>Light: Intensity</label>
+		<input id="lightIntensitySlider" class="blue" type="range"
+		 min="1.0" max="5.0" step="0.5" value="1.5" />
+		</div>
+
+		<div>
+		<label>Eye: X</label>
+		<input id="eyeXSlider" class="green" type="range"
+		 min="-50.0" max="50.0" step="1.0" value="0.0" />
+		</div>
+		
+		<div>
+		<label>Eye: Y</label>
+		<input id="eyeYSlider" class="green" type="range"
+		 min="-50.0" max="50.0" step="0.1" value="0.0" />
+		</div>
+		
+		<div>
+		<label>Eye: Z</label>
+		<input id="eyeZSlider" class="green" type="range"
+		 min="-50.0" max="50.0" step="0.2" value="0.0" />
+		</div>
+
+		<div>
+		<label>direction </label>
+		 <input id="directionSlider" class="blue"type="range"
+		 min="0" max="360" step="1" value="360" />
+		</div>
+
+		<div>
+		<label>At : X </label>
+		<input id="atXSlider" class="black" type="range"
+		 min="-100" max="100" step="1" value="1" />
+		</div>
+		<div>
+		<label>At : Y </label>
+		<input id="atYSlider" class="black" type="range"
+		 min="-100" max="100" step="1" value="0" />
+		</div>
+		<div>
+		<label>At : Z </label>
+		<input id="atZSlider" class="black" type="range"
+		 min="-100" max="100" step="1" value="0" />
+		</div>
+
+
+		<div>
+		<label> Texture Blend </label>
+		<input id="textureBlendSlider" type="range" class="purple" value ="0" step="1" min="0" max="10"/>
+		</div>
+
+		<div>
+		<label> Follow Viewer </label>
+		<input id="followViewer" type="checkbox" />
+		</div>
+
+		<div>
+		<label>Fragment Lighting </label>
+		<input id="useFragment" type="checkbox" />
+		<small> <small>(vertex is default) <small></small>
+		</div>
+
+</div>
+
+<div class="trackball">
+		<div>
+		<label> Use Trackball For Eye </label>
+		<input id="useTrackball" type="checkbox" />
+		</div>
+
+		<div>
+		<label> Theta </label>
+		<input type="range" class="orange" value="0", step = "0.1" max = "10" id="thetaSlider">
+		</div>
+
+		<div>
+		<label> Phi </label>
+		<input type="range" class="orange" value="0", step = "0.1" max = "10" id="phiSlider">
+		</div>
+
+
+		<div>
+		<label>Radius  </label>
+		<input type="range" class="orange" value="4", step = "0.5" max = "10" min="0" id="radiusSlider">
+		</div>
+
+
+</div>
+</body>
+<script type="text/javascript" src="Shading_Lighting.js"></script>
+
+</html>

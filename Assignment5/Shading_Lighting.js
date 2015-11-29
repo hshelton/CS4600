@@ -87,10 +87,10 @@
 		*
 		*/
 
-		var lightX = 1;
-		var lightY = 3;
+		var lightX = 5;
+		var lightY = 5;
 		var lightZ = 2;
-		var lightIntensity = 1.0;
+		var lightIntensity = 1.5;
 		var lightAmbient = vec4(1.0, 1.0, 1.0, 1.0 );
 		var lightDiffuse = vec4( 0.8, 1.0, 1.0, 1.0 );
 		var lightSpecular = vec4( 1, 1.0, 1.0, 1.0 );
@@ -154,8 +154,89 @@
             specular:vec4(0.297254, 0.30829, 0.306678, 0.8),
             shininess:12.8
 		}
+
+		var chromeMaterial =
+		{
+			ambient: vec4(0.25, 0.25, 0.25, 1.0),
+            diffuse: vec4(0.4, 0.4, 0.4, 1.0),
+            specular:vec4(0.774597, 0.774597, 0.774597, 1.0),
+            shininess:76.8
+		}
+
+		var goldMaterial = 
+		{
+			ambient: vec4(0.24725, 0.1995, 0.0745, 1.0),
+            diffuse: vec4(0.75164, 0.60648, 0.22648, 1.0),
+            specular:vec4(0.628281, 0.555802, 0.366065, 1.0),
+            shininess:51.2
+		}
+		var jadeMaterial = 
+		{
+			ambient: vec4(0.135, 0.2225, 0.1575, 0.95),
+            diffuse: vec4(0.54, 0.89, 0.63, 0.95),
+            specular:vec4(0.316228, 0.316228, 0.316228, 0.95),
+            shininess:12.8
+		}
+
+		var pewterMaterial = 
+		{
+			ambient: vec4(0.105882, 0.058824, 0.113725, 1.0),
+            diffuse: vec4(0.427451, 0.470588, 0.541176,  1.0),
+            specular:vec4(0.333333, 0.333333, 0.521569,  1.0),
+            shininess:9.84615
+		}
+
+
+		var aMaterial = 
+		{
+			ambient: vec4(0.1, 0.2225, 0.558, 0.95),
+            diffuse: vec4(0.02, 0.89, 0.63, 0.5),
+            specular:vec4(0.316228, 0.316228, 0.316228, 0.95),
+            shininess:88.8
+		}
+		var bMaterial = 
+		{
+			ambient: vec4(0.112, 0.2225, 0.998, 0.95),
+            diffuse: vec4(0.54, 0.89, 0.63, 0.95),
+            specular:vec4(0.316228, 0.316228, 0.316228, 0.95),
+            shininess:56.8
+		}
+		var cMaterial = 
+		{
+			ambient: vec4(0.02, 0.02, 0.02, 1.0),
+            diffuse: vec4(0.01, 0.01, 0.01, 1.0),
+            specular:vec4(0.4, 0.4, 0.4, 1.0),
+            shininess:10.0
+		}
+		var dMaterial = 
+		{
+			ambient: vec4(0.881, 0.2225, 0.998, 0.95),
+            diffuse: vec4(0.54, 0.56, 0.63, 0.95),
+            specular:vec4(0.316228, 0.316228, 0.56, 0.95),
+            shininess:56.8
+		}
+		
+		var eMaterial = 
+		{
+			ambient: vec4(0.65, 0.88, 0.21, 0.95),
+            diffuse: vec4(0.54, 0.89, 0.63, 0.95),
+            specular:vec4(0.316228, 0.222, 0.316228, 0.95),
+            shininess:89.8
+		}
+
+		var fMaterial = 
+		{
+			ambient: vec4(0.11, 0.21, 0.31, 0.95),
+            diffuse: vec4(0.54, 0.89, 0.63, 0.95),
+            specular:vec4(0.316228, 0.316228, 0.316228, 0.95),
+            shininess:89.8
+		}
+
+
+
 	
 		var currentShininessLoc, currentAbmientLoc, currentDiffuseLoc, currentSpecularLoc;
+
 		var useTextureLoc, textureBlendLoc, fragmentLightingLoc;
 		var lightLoc;
 		var textureBlend = 0.0;
@@ -382,7 +463,7 @@
 	    var image = document.getElementById("texImage");
    		configureTexture( image );
 
-   
+		render();
 		render();
 		}
 
@@ -510,8 +591,8 @@
      //reset all the values when r is pushed
         if (event.keyCode == 82) {
 
-       		lightX = 1;
-			lightY = 3;
+       		lightX = 5;
+			lightY = 5;
 			lightZ = 2;
 	   		eyeX = 0.0;              
 			eyeY = 0.0;
@@ -521,14 +602,14 @@
 			atZ = 0.0;
 			userDirection = 360;
 
-			lightIntensity = 1.0;
+			lightIntensity = 1.5;
 
 			lightMaterial = 
 		{
-			ambient: vec4(0.1, 0.1, 0.1, 0),
+			ambient: vec4(1.0, 1.0, 1.0, 1.0),
 			diffuse: vec4(1.0, 1.0, 1.0, 1.0),
-			specular: vec4(0, 0,0, 0),
-			shininess: 1
+			specular: vec4(1.0, 1.0,0, 1.0),
+			shininess: 0
 		}
 
 		textureBlend = 0.0;
@@ -546,7 +627,7 @@
      	document.getElementById("atXSlider").value = "";
      }
 
-		//render is recursively called to keep drawing the scene
+		// is recursively called to keep drawing the scene
 		var render = function () {
 
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -669,7 +750,7 @@
 		//traverse the heirarchy and apply the correct transformations relative to eachother to draw the dog
 		function drawDog() {
 
-		setMaterial(pearlMaterial);
+		setMaterial(jadeMaterial);
 		drawBody();
 
 		setMaterial(emeraldMaterial);
@@ -729,7 +810,7 @@
 		drawSnout();
 		CTM.push(temp);
 
-
+		setMaterial(goldMaterial);
 		drawEars();
 
 		setMaterial(pearlMaterial);
@@ -771,6 +852,8 @@
 
 		CTM.push(def);
 		drawLegOne();
+
+		setMaterial(aMaterial);
 		drawLegFour();
 		CTM.pop();        
 
@@ -779,7 +862,9 @@
 		def = mult(def, scaleMatrix);
 		def = mult(def, translate(-2, -1, 2));
 		CTM.push(def);
+		setMaterial(bMaterial);
 		drawLegTwo();
+		setMaterial(cMaterial);
 		drawLegThree();
 
 		def = mult(ct, scaleMatrix);
@@ -793,7 +878,7 @@
 		CTM.push(ct);
 
 		ct = mult(ct, translate(0, 0, -5));
-
+	
 		drawSphere(ct);
 
 
@@ -801,6 +886,7 @@
 		ct = mult(ct, scalem(1.6, 0.3, 1));
 
 		ct = mult(ct, translate(0.5, -2.5, 0));
+		setMaterial(pewterMaterial);
 		drawSphere(ct);
 
 		}
@@ -813,6 +899,7 @@
 		drawSphere(ct);
 
 		//draw foot
+		setMaterial(dMaterial);
 		ct = mult(ct, scalem(1.3, 0.3, 1));
 		ct = mult(ct, translate(0.5, -2.5, 0));
 		drawSphere(ct);
@@ -827,6 +914,7 @@
 		drawSphere(ct);
 
 		//draw foot
+		setMaterial(eMaterial);
 		ct = mult(ct, scalem(1.3, 0.3, 1));
 		ct = mult(ct, translate(0.5, -2.5, 0));
 		drawSphere(ct);
@@ -842,6 +930,7 @@
 		drawSphere(ct);
 
 		//draw foot
+		setMaterial(fMaterial);
 		ct = mult(ct, scalem(1.6, 0.3, 1));
 
 		ct = mult(ct, translate(0.5, -2.5, 0));
@@ -858,6 +947,7 @@
 		drawSphere(ct);
 
 		//lower snout
+		setMaterial(chromeMaterial);
 		ct = CTM.pop();
 		ct = mult(ct, rotate(15, [0, 0, 1]));
 		ct = mult(ct, scalem(0.6, 0.3, 0.50));
@@ -878,6 +968,8 @@
 		ct = mult(ct, translate(-0.6, 1, -0.5));
 		ct = mult(ct, rotate(15, [0, 0, 1]));
 		ct = mult(ct, scalem(0.35, 0.8, 0.5));
+
+		setMaterial(obsidianMaterial);
 
 		drawSphere(ct);
 		}
