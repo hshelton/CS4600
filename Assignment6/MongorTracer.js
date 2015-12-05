@@ -15,14 +15,16 @@ var fovDegrees = 60;
 
 var lightSource = vec3(3, -5, 50);
 
+var skyColor = vec4(200, 200, 255, 255);
+
 //rays start at they eye and have a direction vector
 var rays = [];
 
-//the snowman is a collection of sphere objects
-var snowman = 
+
+var objects = 
 [
-	{
-		objectType: "shpere",
+	{   //the snowman is a collection of sphere objects
+		objectType: "sphere",
 		center: vec3(0, 2, 0),
 		radius: 1.5,
 		color: vec3(155, 200, 155),
@@ -70,30 +72,93 @@ function render()
 	context.putImageData(imageData, 0, 0);
 }
 
-
+//this is a helper funtion for trace
+//it calls trace and colors the pixel according to the color returned by trace
 function traceRay(ray, x, y)
 {
 
 		color = trace(ray, 0);
+		//color = vec4(Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), Math.floor(Math.random() * 256), 255.0);
 
 		//figure out which pixel to write to
 		index = x * 4 + (y * viewingDim * 4);
-		imageData.data[index +0 ] = Math.floor(Math.random() * 256); //r
-		imageData.data[index + 1] = Math.floor(Math.random() * 256); //g
-		imageData.data[index + 2] = Math.floor(Math.random() * 256); //b
-		imageData.data[index + 3] = Math.floor(Math.random() * 256); //alpha
+		imageData.data[index +0 ] = color[0]; //r
+		imageData.data[index + 1] = color[1];  //g
+		imageData.data[index + 2] = color[2];  //b
+		imageData.data[index + 3] = color[3]; //alpha
 	
 
 
 }
 
-function trace()
+//recursively trace the ray to keep getting color from the objects it hits
+function trace(ray, recursionLevel)
 {
-	return;
+	if(recursionLevel > 3)
+	{
+		return;
+	}
+	
+	//only the closest object that we intersect with is of any value, since this is a scene with no semitranslucent
+	//objects
+	var closestObject = getClosestObject(ray);
+
+  //if the ray hits no objects, then the color is just the default sky color
+	if(closestObject.distance == Math.max)
+	{
+		return skyColor;
+	}
+	
+
+	//if the ray does hit an object, we need to calculate the point of intersection
+	var intersectionPoint = add(eye, scaleVec3(ray, closestObject.distance));
+
+	var objectNormal = subtract(intersectionPoint, closestObject.object.center);
+
+	return calculateColor(ray, closestObject, intersectionPoint, recursionLevel, objectNormal);
+	
+}
+
+//this function determines if a ray has a collision, and if so determines the object that it hits which is
+//closest to the eye point
+function getClosestObject(ray)
+{
+	//this is the object we'll eventually return
+	var closestObject = {distance: Math.max, object: null};
+
+	//now we need to check this ray for intersections against all of the geometry in the scene
+
+
+	for(var i =0; i < objects.length; i++)
+	{
+		closestObject.object = objects[i];
+		if(objects[i].objectType == "sphere")
+		{
+			//determine if the ray intersects with this sphere
+			closestObject.distance = intersectSphere(ray, objects[i]);
+		}
+	}
+
+	return closestObject;
 }
 
 
+function intersectSphere(ray, object)
+{
+	//this vector is a straight line from eye to center of the sphere
+	var ec = subtract(object.center, eye);
 
+	var r = dot(ec, ray);
+
+	var eoDot = dot(ec, ec);
+
+	var d = (object.radius * object.radius) - eoDot + (r * r);
+	if(d < 0)
+	{
+		return Math.max;
+	}
+	return r = Math.sqrt(d);
+}
 
 
 /*
@@ -115,19 +180,11 @@ context.putImageData(imageData, 0, 0);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 var x = 32;
+
+
+function calculateColor(ray, currentObject, intersectionPoint, depth, normal)
+{
+
+	return vec4(244, 222, 222, 255);
+}
