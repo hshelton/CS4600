@@ -11,3 +11,12 @@ function color(r, g, b, alpha)
 	color.blue = b;
 	color.four = alpha;
 }
+
+function scaleVec3(vector, scalar)
+{
+	a = vector[0] * scalar;
+	b = vector[1] * scalar;
+	c = vector[2] * scalar;
+
+	return vec3(a, b,c);
+}

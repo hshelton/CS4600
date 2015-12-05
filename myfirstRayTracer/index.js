@@ -1,8 +1,8 @@
 //setup
 
 var c = document.getElementById('c'),
-    width = 256,
-    height = 256;
+    width = 512,
+    height = 512;
 
 c.width = width;
 c.height = height;
@@ -16,14 +16,14 @@ var scene = {};
 
 //the camera is a point in space. field of view is like the viewing frustrum
 //vector is where they camera is looking at
-scene.camera = {
+scene.camera = { //synonomous to 'eye'
     point: {
         x: 0,
         y: 1.8,
         z: 10
     },
     fieldOfView: 60,
-    vector: {
+    vector: { //synonomous to 'at'
         x: -1,
         y: 3,
         z: 0
@@ -40,7 +40,7 @@ scene.lights = [{
 ];
 
 //this ray tracer handles only sphere objects with material properties
-scene.objects = [
+scene.objects = [ //synonomous to snowman, plane, etc
     {
         type: 'sphere',
         point: {
@@ -53,9 +53,9 @@ scene.objects = [
             y: 200,
             z: 155
         },
-        specular: 0.2,
-        lambert: 0.9,
-        ambient: 0.1,
+        specular: 0.2, //same name
+        lambert: 0.9, //changed to diffuse
+        ambient: 0.1, //same name
         radius: 1.5
     },
     {
@@ -140,19 +140,17 @@ function render(scene) {
     objects = scene.objects,
     lights = scene.lights;
 
-  	var eyeVector = Vector.unitVector(Vector.subtract(camera.vector, camera.point)),
-  	vpRight = Vector.unitVector(Vector.crossProduct(eyeVector, Vector.UP)),
-    vpUp = Vector.unitVector(Vector.crossProduct(vpRight, eyeVector)),
+
+
+  	var eyeVector = Vector.unitVector(Vector.subtract(camera.vector, camera.point));
+  	var vpRight = Vector.unitVector(Vector.crossProduct(eyeVector, Vector.UP));
+    var vpUp = Vector.unitVector(Vector.crossProduct(vpRight, eyeVector));
 
     //the numbers here are based on the ratio between width and height. *look into this more before copying **
-    fovRadians = Math.PI * (camera.fieldOfView / 2) / 180,
-    heightWidthRatio = height / width,
-    halfWidth = Math.tan(fovRadians),
-    halfHeight = heightWidthRatio * halfWidth,
-    camerawidth = halfWidth * 2,
-    cameraheight = halfHeight * 2,
-    pixelWidth = camerawidth / (width - 1);
-    pixelHeight = cameraheight / (height - 1);
+   var fovRadians = Math.PI * (camera.fieldOfView / 2) / 180;
+
+   var pixelDim = fovRadians * 2 / 512;
+    
 
     //turn the raw pixel x and y values into values from -1 to 1 (clip space) and use these values
     //to scale the facing right and facing up vectors so that we generate a bunch of skewed eyeVectors
@@ -169,10 +167,10 @@ function render(scene) {
 
    	//shit looks fancy but it's just computing a bunch of vectors. so it converts x and y to values between 1 and -1 and
    	//then sqews the up and right vectors to get a bunch of vectors
-    for (var x = 0; x < width; x++) {
-     	for (var y = 0; y < height; y++) {
-            var xcomp = Vector.scale(vpRight, (x * pixelWidth) - halfWidth),
-                ycomp = Vector.scale(vpUp, (y * pixelHeight) - halfHeight);
+    for (var x = 0; x < 256; x++) {
+     	for (var y = 0; y < 256; y++) {
+            var xcomp = Vector.scale(vpRight, (x * pixelDim) - fovRadians);
+            var ycomp = Vector.scale(vpUp, (y * pixelDim) - fovRadians);
 
             ray.vector = Vector.unitVector(Vector.add3(eyeVector, xcomp, ycomp));
 
