@@ -13,7 +13,7 @@ var eye = vec3(0, 1.8, 10);
 var at = vec3(-1, 3, 0);
 var fovDegrees = 60;
 
-var lightSource = vec3(0, 10, -5);
+var lightSource = vec3(0, -10, -5);
 
 var skyColor = vec4(200, 200, 255, 255);
 
@@ -65,12 +65,12 @@ var objects =
 		//white ball
 	{   
 			objectType: "sphere",
-			center: vec3(1, 0, 0),
+			center: vec3(1, 5, 0),
 			radius: 1,
 			color: vec3(255, 255, 255),
-			ambient: 0.2,
+			ambient: 0.5,
 			diffuse: 0.2,
-			specular: 0.5
+			specular: 0.3
 
 	}
 
@@ -163,7 +163,10 @@ function trace(ray, recursionLevel, startPoint)
 
 
 
-	var objectNormal = subtract(intersectionPoint, closestObject.object.center);
+	var objectNormal = subtract( closestObject.object.center, intersectionPoint);
+	//objectNormal [0] = objectNormal[0] * -1;
+	//objectNormal [1] = objectNormal[1] * -1;
+	objectNormal [2] = objectNormal[2] * -1;
 
 	return calculateColor(ray, closestObject, intersectionPoint, recursionLevel, objectNormal);
 	
