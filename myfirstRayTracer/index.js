@@ -34,7 +34,7 @@ scene.camera = { //synonomous to 'eye'
 scene.lights = [{
     x: 3,
     y: -5,
-    z: 50
+    z: 5
 },
 
 ];
@@ -58,23 +58,7 @@ scene.objects = [ //synonomous to snowman, plane, etc
         ambient: 0.1, //same name
         radius: 1.5
     },
-    {
-        type: 'sphere',
-        point: {
-            x: -4,
-            y: 2,
-            z: -16
-        },
-        color: {
-            x: 155,
-            y: 155,
-            z: 155
-        },
-        specular: 0.1,
-        lambert: 1.0,
-        ambient: 0.0,
-        radius: 0.8
-    },
+   
    
     {
         type: 'sphere',
@@ -95,39 +79,7 @@ scene.objects = [ //synonomous to snowman, plane, etc
     },
    
 
-    {
-    	type: 'plane',
-    
-    	Q:
-    	{
-    		x: 0,
-    		y: 3.4,
-    		z: 10
-    	},
-    	point:
-    	{
-    		x: 0,
-    		y:0,
-    		z:0
-    	},
-    	N:
-    	{
-    		x: 0,
-    		y: 1,
-    		z:0
-    	},
-    	        color: {
-            x: 100,
-            y: 100,
-            z:100
-        },
-    	width: 10,
-    	height: 10,
-    	lambert: 1.0,
-    	specular: 0.0,
-    	ambient: 0.5,
-
-    }
+  
 ];
 
 
@@ -217,6 +169,9 @@ function trace(ray, scene, depth) {
     //so if we have vector (1, 0.5, 2.5) and it hits the object, make it a new vector that's just scaled up to the distance where it intersects with the object
      var pointAtTime = Vector.add(ray.point, Vector.scale(ray.vector, dist));
 
+
+    
+
      return surface(ray, scene, object, pointAtTime, sphereNormal(object, pointAtTime), depth);
 }
 
@@ -229,6 +184,7 @@ function trace(ray, scene, depth) {
 function intersectScene(ray, scene) {
     // The base case is that it hits nothing, and travels for `Infinity`
     var closest = [Infinity, null];
+    
     // But for each object, we check whether it has any intersection,
     // and compare that intersection - is it closer than `Infinity` at first,
     // and then is it closer than other objects that have been hit?
@@ -348,6 +304,8 @@ function surface(ray, scene, object, pointAtTime, normal, depth) {
             // essentially is a 'diffuse' lighting system - direct light
             // is bright, and from there, less direct light is gradually,
             // beautifully, less light.
+
+            
             var contribution = Vector.dotProduct(Vector.unitVector(
                 Vector.subtract(lightPoint, pointAtTime)), normal);
             // sometimes this formula can return negatives, so we check:

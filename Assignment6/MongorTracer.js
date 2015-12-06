@@ -13,9 +13,11 @@ var eye = vec3(0, 1.8, 10);
 var at = vec3(-1, 3, 0);
 var fovDegrees = 60;
 
-var lightSource = vec3(3, -5, 50);
+var lightSource = vec3(0, 10, -5);
 
 var skyColor = vec4(200, 200, 255, 255);
+
+
 
 //rays start at they eye and have a direction vector
 var rays = [];
@@ -23,18 +25,62 @@ var rays = [];
 
 var objects = 
 [
-	{   //the snowman is a collection of sphere objects
-		objectType: "sphere",
-		center: vec3(0, 2, 0),
-		radius: 1.5,
-		color: vec3(155, 200, 155),
-		ambient: 0.1,
-		diffuse: 0.9,
-		specular: 0.2
+	//the snowman is a collection of sphere objects
+	
+	//red ball
+	{   
+			objectType: "sphere",
+			center: vec3(0, 2, 0),
+			radius: 1,
+			color: vec3(200, 0, 0),
+			ambient:0.6,
+			diffuse: 0.5,
+			specular:  0
+
+	},
+
+		//green ball
+	{   
+			objectType: "sphere",
+			center: vec3(2, 3, 0),
+			radius: 1,
+			color: vec3(0, 200, 0),
+			ambient:0.6,
+			diffuse: 0.5,
+			specular:  0
+
+	},
+		//blue ball
+	{   
+			objectType: "sphere",
+			center: vec3(1,1.5, 0),
+			radius: 0.4,
+			color: vec3(0, 0, 200),
+			ambient:0.6,
+			diffuse: 0.5,
+			specular:  0
+
+	},
+
+		//white ball
+	{   
+			objectType: "sphere",
+			center: vec3(1, 0, 0),
+			radius: 1,
+			color: vec3(255, 255, 255),
+			ambient: 0.2,
+			diffuse: 0.2,
+			specular: 0.5
 
 	}
 
-];
+		
+
+
+		
+
+
+]
 
 render();
 
@@ -87,31 +133,35 @@ function traceRay(ray, x, y)
 		imageData.data[index + 2] = color[2];  //b
 		imageData.data[index + 3] = color[3]; //alpha
 	
-
-
 }
 
 //recursively trace the ray to keep getting color from the objects it hits
-function trace(ray, recursionLevel)
+function trace(ray, recursionLevel, startPoint)
 {
 	if(recursionLevel > 3)
 	{
 		return;
 	}
 	
+	if(startPoint == undefined)
+	{
+		startPoint = eye;
+	}
 	//only the closest object that we intersect with is of any value, since this is a scene with no semitranslucent
 	//objects
-	var closestObject = getClosestObject(ray);
+	var closestObject = getClosestObject(ray, startPoint);
 
   //if the ray hits no objects, then the color is just the default sky color
-	if(closestObject.distance == Math.max)
+	if(closestObject.distance == Number.MAX_VALUE)
 	{
 		return skyColor;
 	}
 	
 
 	//if the ray does hit an object, we need to calculate the point of intersection
-	var intersectionPoint = add(eye, scaleVec3(ray, closestObject.distance));
+	var intersectionPoint = add(startPoint, scaleVec3(ray, closestObject.distance));
+
+
 
 	var objectNormal = subtract(intersectionPoint, closestObject.object.center);
 
@@ -121,21 +171,29 @@ function trace(ray, recursionLevel)
 
 //this function determines if a ray has a collision, and if so determines the object that it hits which is
 //closest to the eye point
-function getClosestObject(ray)
+function getClosestObject(ray, rayStart)
 {
 	//this is the object we'll eventually return
-	var closestObject = {distance: Math.max, object: null};
-
+	var closestObject = {distance: Number.MAX_VALUE};
+	var currentDistance;
 	//now we need to check this ray for intersections against all of the geometry in the scene
-
 
 	for(var i =0; i < objects.length; i++)
 	{
-		closestObject.object = objects[i];
 		if(objects[i].objectType == "sphere")
 		{
 			//determine if the ray intersects with this sphere
-			closestObject.distance = intersectSphere(ray, objects[i]);
+			currentDistance = intersectSphere(ray, rayStart, objects[i]);
+		}
+
+		if(currentDistance < closestObject.distance )
+		{
+			closestObject.distance = currentDistance;
+			closestObject.object = objects[i];
+			closestObject.color = objects[i].color;
+			closestObject.specular = objects[i].specular;
+			closestObject.diffuse = objects[i].diffuse;
+			closestObject.ambient = objects[i].ambient;
 		}
 	}
 
@@ -143,10 +201,10 @@ function getClosestObject(ray)
 }
 
 
-function intersectSphere(ray, object)
+function intersectSphere(ray, rayStart, object)
 {
-	//this vector is a straight line from eye to center of the sphere
-	var ec = subtract(object.center, eye);
+
+	var ec = subtract( object.center, eye);
 
 	var r = dot(ec, ray);
 
@@ -155,36 +213,85 @@ function intersectSphere(ray, object)
 	var d = (object.radius * object.radius) - eoDot + (r * r);
 	if(d < 0)
 	{
-		return Math.max;
+		return;
 	}
-	return r = Math.sqrt(d);
+	var what = r - Math.sqrt(d);
+	return r - Math.sqrt(d);
 }
 
 
-/*
-
-
-fun
-for(var i = 0; i < 30000; i+=4)
-{
-       var what = imageData.data[i];
-       imageData.data[i] = 0;
-       imageData.data[i+1] = 0;
-       imageData.data[i+2] = 255;
-       imageData.data[i+3] = 255;
-}
-*/
-
-//this loads imageData into the canvas to display the ray traced image
-context.putImageData(imageData, 0, 0);
 
 
 
-var x = 32;
+
 
 
 function calculateColor(ray, currentObject, intersectionPoint, depth, normal)
 {
+	var b = currentObject.color;
 
-	return vec4(244, 222, 222, 255);
+	var c = vec3(0, 0, 0);
+
+	lambertAmount = 0;
+
+	if(currentObject.diffuse > 0)
+	{
+
+            var lightPoint = lightSource;
+            // First: can we see the light? If not, this is a shadowy area
+            // and it gets no light from the lambert shading process.
+            if (isLightVisible(intersectionPoint, lightPoint))
+            {
+   
+
+            
+            var contribution = dot(
+                subtract(intersectionPoint, lightSource), normal);
+
+           
+            // sometimes this formula can return negatives, so we check:
+            // we only want positive values for lighting.
+            if (contribution > 0) lambertAmount += contribution;
+            }
+      
+	}
+
+	  if (currentObject.specular > 0) {
+
+	  	var reflectionVector = getReflectionVector(ray, normal);
+
+        var reflectedColor = trace(reflectionVector, ++depth, intersectionPoint);
+        if (reflectedColor) {
+            c = add(c, scaleVec3(reflectedColor, currentObject.specular));
+        }
+    }
+
+     lambertAmount = Math.min(1, lambertAmount);
+
+     var result = add(c,
+        scaleVec3(b, lambertAmount * currentObject.diffuse));
+
+     result = add(result, scaleVec3(b, currentObject.ambient));
+	return vec4(result[0], result[1], result[2], 255);
+
 }
+
+	function isLightVisible(pt, light) {
+
+	var ray = normalize(subtract(pt, light));
+
+    var distObject =  getClosestObject(ray, pt);
+        
+    return true;
+}
+
+
+//calculate the reflection vector given the direction vector of the ray and the surface normal
+function getReflectionVector(d, n)
+{
+	var a = dot(d, n);
+	var b = a * 2;
+	var c = add(d, scaleVec3(n, b));
+	return c;
+}
+
