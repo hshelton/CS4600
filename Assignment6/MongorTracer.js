@@ -65,7 +65,7 @@ var objects =
 		//white ball
 	{   
 			objectType: "sphere",
-			center: vec3(1, 5, 0),
+			center: vec3(1, -1, 1),
 			radius: 1,
 			color: vec3(255, 255, 255),
 			ambient: 0.5,
