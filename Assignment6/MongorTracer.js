@@ -30,7 +30,7 @@ var objects =
 	//red ball
 	{   
 			objectType: "sphere",
-			center: vec3(0, 2, 0),
+			center: vec3(0, 4, 0),
 			radius: 1,
 			color: vec3(200, 0, 0),
 			ambient:0.6,
@@ -42,19 +42,19 @@ var objects =
 		//green ball
 	{   
 			objectType: "sphere",
-			center: vec3(2, 3, 0),
-			radius: 1,
-			color: vec3(0, 200, 0),
+			center: vec3(0, 2.5, 0),
+			radius: 0.7,
+			color: vec3(1, 200, 1),
 			ambient:0.6,
-			diffuse: 0.5,
-			specular:  0
+			diffuse: 0.3,
+			specular: 0.1
 
 	},
 		//blue ball
 	{   
 			objectType: "sphere",
-			center: vec3(1,1.5, 0),
-			radius: 0.4,
+			center: vec3(0,1.5, 0),
+			radius: 0.5,
 			color: vec3(0, 0, 200),
 			ambient:0.6,
 			diffuse: 0.5,
@@ -62,17 +62,18 @@ var objects =
 
 	},
 
-		//white ball
-	{   
-			objectType: "sphere",
-			center: vec3(1, -1, 1),
-			radius: 1,
-			color: vec3(255, 255, 255),
-			ambient: 0.5,
-			diffuse: 0.2,
-			specular: 0.3
+    //mirror sphere
+    {
+        objectType: "sphere",
+        center: vec3(-4, 3, 0),
+        radius: 1,
+        color: vec3(200, 200, 200),
+        ambient: 0.3,
+        diffuse: 0.5,
+        specular: 0.5
+    }
 
-	}
+
 
 		
 
@@ -96,7 +97,6 @@ function render()
 	var eyeUp = normalize(cross(eyeRight, eyeUnit));
 
 	//now we generate a bunch of rays
-	//convert fov to radians
 	var fovRadians = Math.PI * (fovDegrees /2) / 180;
 
 	//we want a ray for each square 'pixel'
@@ -138,7 +138,7 @@ function traceRay(ray, x, y)
 //recursively trace the ray to keep getting color from the objects it hits
 function trace(ray, recursionLevel, startPoint)
 {
-	if(recursionLevel > 3)
+	if(recursionLevel > 5)
 	{
 		return;
 	}
@@ -159,7 +159,7 @@ function trace(ray, recursionLevel, startPoint)
 	
 
 	//if the ray does hit an object, we need to calculate the point of intersection
-	var intersectionPoint = add(startPoint, scaleVec3(ray, closestObject.distance));
+	var intersectionPoint = add(startPoint, scaleVec3(ray, closestObject.distance + 0.1));
 
 
 
@@ -168,7 +168,51 @@ function trace(ray, recursionLevel, startPoint)
 	//objectNormal [1] = objectNormal[1] * -1;
 	objectNormal [2] = objectNormal[2] * -1;
 
-	return calculateColor(ray, closestObject, intersectionPoint, recursionLevel, objectNormal);
+
+	var currentObject = closestObject;
+
+    //figure out the color contribution of this ray
+	var a = closestObject.color;
+
+	var b = vec3(0, 0, 0);
+	
+	specularContribution = 0;
+
+	if (closestObject.diffuse > 0) {
+
+	   
+	    var contribution = dot(
+    subtract(intersectionPoint, lightSource), objectNormal);
+
+	    if (contribution > 0) {
+	        specularContribution += contribution;
+	    }
+
+
+	}
+
+	if (closestObject.specular > 0) {
+
+	    var reflectionVector = getReflectionVector(ray, objectNormal);
+
+	    var reflectedColor = trace(reflectionVector, ++recursionLevel, intersectionPoint);
+	    if (reflectedColor) {
+	        b = add(b, scaleVec3(reflectedColor, closestObject.specular));
+	    }
+	}
+
+	if (specularContribution > 1)
+	{
+	    specularContribution = 1;
+	}
+
+    //TODO: FIGURE OUT IF THE OBJECT IS IN SHADOW
+
+	var result = add(b,
+       scaleVec3(a, specularContribution * closestObject.diffuse));
+
+	result = add(result, scaleVec3(a, closestObject.ambient));
+	return vec4(result[0], result[1], result[2], 255);
 	
 }
 
@@ -229,72 +273,14 @@ function intersectSphere(ray, rayStart, object)
 
 
 
-function calculateColor(ray, currentObject, intersectionPoint, depth, normal)
-{
-	var b = currentObject.color;
-
-	var c = vec3(0, 0, 0);
-
-	lambertAmount = 0;
-
-	if(currentObject.diffuse > 0)
-	{
-
-            var lightPoint = lightSource;
-            // First: can we see the light? If not, this is a shadowy area
-            // and it gets no light from the lambert shading process.
-            if (isLightVisible(intersectionPoint, lightPoint))
-            {
-   
-
-            
-            var contribution = dot(
-                subtract(intersectionPoint, lightSource), normal);
-
-           
-            // sometimes this formula can return negatives, so we check:
-            // we only want positive values for lighting.
-            if (contribution > 0) lambertAmount += contribution;
-            }
-      
-	}
-
-	  if (currentObject.specular > 0) {
-
-	  	var reflectionVector = getReflectionVector(ray, normal);
-
-        var reflectedColor = trace(reflectionVector, ++depth, intersectionPoint);
-        if (reflectedColor) {
-            c = add(c, scaleVec3(reflectedColor, currentObject.specular));
-        }
-    }
-
-     lambertAmount = Math.min(1, lambertAmount);
-
-     var result = add(c,
-        scaleVec3(b, lambertAmount * currentObject.diffuse));
-
-     result = add(result, scaleVec3(b, currentObject.ambient));
-	return vec4(result[0], result[1], result[2], 255);
-
-}
-
-	function isLightVisible(pt, light) {
-
-	var ray = normalize(subtract(pt, light));
-
-    var distObject =  getClosestObject(ray, pt);
-        
-    return true;
-}
-
-
 //calculate the reflection vector given the direction vector of the ray and the surface normal
 function getReflectionVector(d, n)
 {
 	var a = dot(d, n);
 	var b = a * 2;
 	var c = add(d, scaleVec3(n, b));
+	
+
 	return c;
 }
 
