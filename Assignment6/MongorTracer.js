@@ -13,7 +13,7 @@ var eye = vec3(0, 1.8, 10);
 var at = vec3(-1, 3, 0);
 var fovDegrees = 60;
 
-var lightSource = vec3(0, -10, -5);
+var lightSource = vec3(20, -10, 0);
 
 var skyColor = vec4(200, 200, 255, 255);
 
@@ -68,7 +68,7 @@ var objects =
         center: vec3(-4, 3, 0),
         radius: 1,
         color: vec3(200, 200, 200),
-        ambient: 0.3,
+        ambient: 0.1,
         diffuse: 0.5,
         specular: 0.5
     }
