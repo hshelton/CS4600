@@ -9,13 +9,13 @@ var viewingDim = 512;
 var imageData = context.getImageData(0, 0, viewingDim, viewingDim);
 
 /*********************Scene Variables ******************************/
-var eye = vec3(0, 1.8, 10);
-var at = vec3(-1, 3, 0);
+var eye = vec3(0, 2, 5);
+var at = vec3(-1, 2.5, 0);
 var fovDegrees = 60;
 
-var lightSource = vec3(20, -10, 0);
+var lightSource = vec3(5, -20, 0);
 
-var skyColor = vec4(200, 200, 255, 255);
+var skyColor = vec4(202, 242, 255, 255);
 
 
 
@@ -27,13 +27,13 @@ var objects =
 [
 	//the snowman is a collection of sphere objects
 	
-	//red ball
+	//purple ball
 	{   
 			objectType: "sphere",
 			center: vec3(0, 4, 0),
 			radius: 1,
-			color: vec3(200, 0, 0),
-			ambient:0.6,
+			color: vec3(102, 0, 51),
+			ambient:0.5,
 			diffuse: 0.5,
 			specular:  0
 
@@ -44,10 +44,10 @@ var objects =
 			objectType: "sphere",
 			center: vec3(0, 2.5, 0),
 			radius: 0.7,
-			color: vec3(1, 200, 1),
-			ambient:0.6,
-			diffuse: 0.3,
-			specular: 0.1
+			color: vec3(51, 204, 51),
+			ambient:0.3,
+			diffuse: 0.4,
+			specular: 0.5
 
 	},
 		//blue ball
@@ -55,30 +55,34 @@ var objects =
 			objectType: "sphere",
 			center: vec3(0,1.5, 0),
 			radius: 0.5,
-			color: vec3(0, 0, 200),
-			ambient:0.6,
+			color: vec3(0, 176, 252),
+			ambient:0.5,
 			diffuse: 0.5,
 			specular:  0
 
 	},
 
+		//black ball
+	{
+			objectType: "sphere",
+			center: vec3(0,1.0, 0),
+			radius: 0.24,
+			color: vec3(0, 0, 0),
+			ambient:0.5,
+			diffuse: 0.5,
+			specular:  0
+	},
+
     //mirror sphere
     {
         objectType: "sphere",
-        center: vec3(-4, 3, 0),
-        radius: 1,
-        color: vec3(200, 200, 200),
-        ambient: 0.1,
-        diffuse: 0.5,
-        specular: 0.5
+        center: vec3(-1.8, 2.5, 0.8),
+        radius: 0.54,
+		color: vec3(100, 100, 100),
+		ambient:0.0,
+		diffuse: 0.0,
+		specular: 0.8
     }
-
-
-
-		
-
-
-		
 
 
 ]
@@ -138,7 +142,7 @@ function traceRay(ray, x, y)
 //recursively trace the ray to keep getting color from the objects it hits
 function trace(ray, recursionLevel, startPoint)
 {
-	if(recursionLevel > 5)
+	if(recursionLevel > 8)
 	{
 		return;
 	}
@@ -161,7 +165,7 @@ function trace(ray, recursionLevel, startPoint)
 	//if the ray does hit an object, we need to calculate the point of intersection
 	var intersectionPoint = add(startPoint, scaleVec3(ray, closestObject.distance + 0.1));
 
-
+	
 
 	var objectNormal = subtract( closestObject.object.center, intersectionPoint);
 	//objectNormal [0] = objectNormal[0] * -1;
@@ -178,18 +182,7 @@ function trace(ray, recursionLevel, startPoint)
 	
 	specularContribution = 0;
 
-	if (closestObject.diffuse > 0) {
 
-	   
-	    var contribution = dot(
-    subtract(intersectionPoint, lightSource), objectNormal);
-
-	    if (contribution > 0) {
-	        specularContribution += contribution;
-	    }
-
-
-	}
 
 	if (closestObject.specular > 0) {
 
@@ -199,6 +192,19 @@ function trace(ray, recursionLevel, startPoint)
 	    if (reflectedColor) {
 	        b = add(b, scaleVec3(reflectedColor, closestObject.specular));
 	    }
+	}
+
+	if (closestObject.diffuse > 0) {
+
+	   
+	    var contribution = dot(
+    subtract(intersectionPoint, lightSource), objectNormal);
+
+	    if (contribution > 0) {
+	        b = add(b, scaleVec3(closestObject.color, closestObject.diffuse));
+	    }
+
+
 	}
 
 	if (specularContribution > 1)
@@ -252,25 +258,17 @@ function intersectSphere(ray, rayStart, object)
 {
 
 	var ec = subtract( object.center, eye);
-
 	var r = dot(ec, ray);
+	var ecDot = dot(ec, ec);
 
-	var eoDot = dot(ec, ec);
-
-	var d = (object.radius * object.radius) - eoDot + (r * r);
+	var d = (object.radius * object.radius) - ecDot + (r * r);
 	if(d < 0)
 	{
 		return;
 	}
-	var what = r - Math.sqrt(d);
+	
 	return r - Math.sqrt(d);
 }
-
-
-
-
-
-
 
 
 //calculate the reflection vector given the direction vector of the ray and the surface normal
@@ -280,6 +278,9 @@ function getReflectionVector(d, n)
 	var b = a * 2;
 	var c = add(d, scaleVec3(n, b));
 	
+	c[0] *= -1;
+	c[1] *= -1;
+	c[2] *= -1;
 
 	return c;
 }
