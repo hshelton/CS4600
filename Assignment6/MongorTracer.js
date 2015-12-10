@@ -45,9 +45,9 @@ var objects =
 			center: vec3(0, 2.5, 0),
 			radius: 0.7,
 			color: vec3(51, 204, 51),
-			ambient:0.3,
+			ambient:0.2,
 			diffuse: 0.4,
-			specular: 0.5
+			specular: 0.6
 
 	},
 		//blue ball
@@ -62,16 +62,7 @@ var objects =
 
 	},
 
-		//black ball
-	{
-			objectType: "sphere",
-			center: vec3(0,1.0, 0),
-			radius: 0.24,
-			color: vec3(0, 0, 0),
-			ambient:0.5,
-			diffuse: 0.5,
-			specular:  0
-	},
+
 
     //mirror sphere
     {
@@ -82,9 +73,26 @@ var objects =
 		ambient:0.0,
 		diffuse: 0.0,
 		specular: 0.8
+    },
+
+
+
+    {
+    objectType: 'plane',
+    
+    Q: vec3(0, -1, 100),
+    point: vec3(0, 0, 10),
+    center: vec3(0, 0, 10),
+    N: vec3(0, 1, 0),
+    color: vec3(0, 0, 0),
+    isFloor: true,
+    width: 100,
+    height: 100,
+    ambient: 0.5,
+    diffuse: 0.5,
+    specular: 0.0
+
     }
-
-
 ]
 
 render();
@@ -239,6 +247,11 @@ function getClosestObject(ray, rayStart)
 			currentDistance = intersectSphere(ray, rayStart, objects[i]);
 		}
 
+		if(objects[i].objectType == "plane")
+		{
+			currentDistance = intersectPlane(ray, rayStart, objects[i]);
+		}
+
 		if(currentDistance < closestObject.distance )
 		{
 			closestObject.distance = currentDistance;
@@ -285,3 +298,82 @@ function getReflectionVector(d, n)
 	return c;
 }
 
+function intersectPlane(ray, startPoint, plane)
+{
+	var N = plane.N;
+	var Q = plane.Q;
+
+	// a ray is defined by an origin or eye point E, and and offset Vector D
+	var E = startPoint;
+	var D = ray;
+
+	var tNumerator = dot(N, subtract(E, Q));
+	var tDenominator = dot(N, D);
+
+	var t = tNumerator/ tDenominator;
+	if(t > 0)
+	{
+		//find the point of intersection IN = E + t * D
+
+		var tD = {
+			x: t * D[0],
+			y: t * D[1],
+			z: t * D[2]
+		};
+		var IN = 
+		{
+			x: E[0] + tD.x,
+			y: E[1] +tD.y,
+			z: E[2] + tD.z
+		};
+
+		if(IN.x > 10|| IN.z > 10)
+		{
+		  return;
+		 
+		}
+
+		if(plane.isFloor)
+		{
+					var part1 = false;
+		var part2 = false;
+		
+		var white = (IN.x % 2).toFixed(2);
+		var tile = parseInt((white % 1.0) * 10);
+		
+		if (tile % 2 == 0)
+		{
+		  part1 = true; 
+		}
+		
+		white = (IN.z % 2).toFixed(5);
+		tile = parseInt((white % 1.0) * 10);
+		
+		
+		if(tile % 2 == 0)
+		{
+		  part2 = true;
+		}
+		
+		if(part1 && part2)
+		{
+		return;
+		}
+		
+		if(t > 500)
+		{
+		
+		 return; 
+		  
+		}
+		}
+		
+
+
+		return t;
+	}
+
+     
+
+
+}
